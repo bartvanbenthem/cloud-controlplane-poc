@@ -1,6 +1,6 @@
-# Multi-cloud ControlPlane
+# Multi-cloud ControlPlane POC
 
-A [Backstage](https://backstage.io) developer portal for provisioning and
+POC project regarding a [Backstage](https://backstage.io) developer portal for provisioning and
 observing [stackit-compute-operator](https://github.com/bartvanbenthem/stackit-compute-operator)
 resources — STACKIT Compute Engine servers and STACKIT Kubernetes Engine
 (SKE) clusters — through a self-service UI backed by GitOps.
