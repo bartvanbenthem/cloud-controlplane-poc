@@ -1,0 +1,113 @@
+app:
+  title: Multi-cloud ControlPlane
+  baseUrl: http://localhost:3000
+
+organization:
+  name: STACKIT
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+  csp:
+    connect-src: ["'self'", 'http:', 'https:']
+  cors:
+    origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
+
+# --- GitHub integration -----------------------------------------------------
+# Needed by the scaffolder-backend-module-github publish action, which the
+# stackit-server and stackit-ske-cluster templates use to open a PR against
+# this repo's own gitops/ folder.
+#
+# GITHUB_TOKEN needs `repo` scope (classic) or Contents+Pull requests
+# read/write (fine-grained) on the developer-portal repo.
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+auth:
+  environment: development
+  providers:
+    guest: {}
+
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+    pullRequestBranchName: backstage-integration
+  rules:
+    - allow: [Component, System, API, Resource, Location, Template, Group, User]
+  locations:
+    - type: file
+      target: ../../examples/org.yaml
+      rules:
+        - allow: [User, Group]
+
+    # Software templates
+    - type: file
+      target: ../../templates/stackit-server/template.yaml
+      rules:
+        - allow: [Template]
+    - type: file
+      target: ../../templates/stackit-ske-cluster/template.yaml
+      rules:
+        - allow: [Template]
+
+    # Every manifest a template PR merges into gitops/**/catalog-info.yaml is
+    # picked up here, so created Servers/Clusters show up as Components.
+    - type: file
+      target: ../../gitops/servers/*/catalog-info.yaml
+      rules:
+        - allow: [Component]
+    - type: file
+      target: ../../gitops/clusters/*/catalog-info.yaml
+      rules:
+        - allow: [Component]
+
+# --- Kubernetes plugin -------------------------------------------------------
+# Surfaces live status of the CRDs the stackit-compute-operator manages
+# (Server, Cluster/SKE, and the supporting Volume/Image/Network kinds) on
+# each Component's "Kubernetes" tab, matched via the backstage.io/kubernetes-id
+# label the templates stamp onto every generated manifest.
+#
+# PLACEHOLDER: fill in the real cluster URL + auth once the cluster running
+# stackit-compute-operator is available. See gitops-bootstrap/README.md.
+kubernetes:
+  serviceLocatorMethod:
+    type: multiTenant
+  clusterLocatorMethods:
+    - type: config
+      clusters:
+        - url: ${K8S_CLUSTER_URL}
+          name: stackit-cluster
+          authProvider: serviceAccount
+          skipTLSVerify: false
+          serviceAccountToken: ${K8S_SERVICE_ACCOUNT_TOKEN}
+  customResources:
+    - group: 'compute.sostackit.dev'
+      apiVersion: 'v1alpha1'
+      plural: 'servers'
+    - group: 'compute.sostackit.dev'
+      apiVersion: 'v1alpha1'
+      plural: 'clusters'
+    - group: 'compute.sostackit.dev'
+      apiVersion: 'v1alpha1'
+      plural: 'volumes'
+    - group: 'compute.sostackit.dev'
+      apiVersion: 'v1alpha1'
+      plural: 'images'
+    - group: 'compute.sostackit.dev'
+      apiVersion: 'v1alpha1'
+      plural: 'networks'
+
+techdocs:
+  builder: 'local'
+  generator:
+    runIn: 'local'
+  publisher:
+    type: 'local'

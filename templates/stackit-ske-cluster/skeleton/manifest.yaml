@@ -1,0 +1,31 @@
+apiVersion: compute.sostackit.dev/v1alpha1
+kind: Cluster
+metadata:
+  name: ${{ values.name }}
+  namespace: ${{ values.namespace }}
+  labels:
+    backstage.io/kubernetes-id: ${{ values.name }}
+    environment: ${{ values.environment }}
+    ${% if values.team %}team: ${{ values.team }}${% endif %}
+spec:
+  projectId: ${{ values.projectId }}
+  region: ${{ values.region }}
+  kubernetesVersion: '${{ values.kubernetesVersion }}'
+  nodePools:
+    - name: ${{ values.poolName }}
+      machineType: ${{ values.poolMachineType }}
+      machineImageName: ${{ values.poolMachineImageName }}
+      machineImageVersion: '${{ values.poolMachineImageVersion }}'
+      availabilityZones:
+        ${% for az in values.poolAvailabilityZones %}- ${{ az }}
+        ${% endfor %}
+      minimum: ${{ values.poolMinimum }}
+      maximum: ${{ values.poolMaximum }}
+      allowSystemComponents: true
+      volume:
+        size: ${{ values.poolVolumeSize }}
+  maintenance:
+    autoUpdateKubernetesVersion: ${{ values.autoUpdateKubernetesVersion }}
+    autoUpdateMachineImageVersion: ${{ values.autoUpdateMachineImageVersion }}
+    start: '${{ values.maintenanceStart }}'
+    end: '${{ values.maintenanceEnd }}'

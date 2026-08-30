@@ -1,0 +1,18 @@
+app:
+  baseUrl: https://developer-portal.example.com
+
+backend:
+  baseUrl: https://developer-portal.example.com
+  cors:
+    origin: https://developer-portal.example.com
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+
+techdocs:
+  publisher:
+    type: local

@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: stackit-compute
+  description: >-
+    STACKIT Compute Engine and Kubernetes Engine (SKE) resources managed
+    through the stackit-compute-operator, provisioned via this Backstage
+    portal's Server and SKE Cluster templates.
+  links:
+    - url: https://github.com/bartvanbenthem/stackit-compute-operator
+      title: stackit-compute-operator
+spec:
+  owner: group:platform-team

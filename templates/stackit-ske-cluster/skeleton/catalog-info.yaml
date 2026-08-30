@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: STACKIT SKE Cluster (k8s ${{ values.kubernetesVersion }}) provisioned via stackit-compute-operator.
+  annotations:
+    backstage.io/kubernetes-id: ${{ values.name }}
+    backstage.io/kubernetes-namespace: ${{ values.namespace }}
+  tags:
+    - stackit
+    - ske
+    - kubernetes
+    - ${{ values.environment }}
+spec:
+  type: stackit-ske-cluster
+  lifecycle: ${{ values.environment }}
+  owner: ${{ values.owner }}
+  system: stackit-compute
+  dependsOn: []

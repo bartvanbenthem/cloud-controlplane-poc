@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: STACKIT Server (${{ values.machineType }}) provisioned via stackit-compute-operator.
+  annotations:
+    backstage.io/kubernetes-id: ${{ values.name }}
+    backstage.io/kubernetes-namespace: ${{ values.namespace }}
+  tags:
+    - stackit
+    - server
+    - ${{ values.environment }}
+spec:
+  type: stackit-server
+  lifecycle: ${{ values.environment }}
+  owner: ${{ values.owner }}
+  system: stackit-compute
+  dependsOn: []
