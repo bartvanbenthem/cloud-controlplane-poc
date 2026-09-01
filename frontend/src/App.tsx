@@ -1,6 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar";
 import { Dashboard } from "./pages/Dashboard";
+import { StackitHome } from "./pages/StackitHome";
+import { Paas } from "./pages/Paas";
 import { ResourceList } from "./pages/ResourceList";
 import { ResourceDetail } from "./pages/ResourceDetail";
 import { ServerCreate } from "./pages/ServerCreate";
@@ -14,25 +16,43 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
 
+          <Route path="/stackit" element={<StackitHome />} />
+
           <Route
-            path="/servers"
-            element={<ResourceList kind="servers" title="Servers" createPath="/servers/new" />}
+            path="/stackit/servers"
+            element={
+              <ResourceList
+                kind="servers"
+                title="Servers"
+                basePath="/stackit/servers"
+                createPath="/stackit/servers/new"
+              />
+            }
           />
-          <Route path="/servers/new" element={<ServerCreate />} />
+          <Route path="/stackit/servers/new" element={<ServerCreate />} />
           <Route
-            path="/servers/:namespace/:name"
-            element={<ResourceDetail kind="servers" listPath="/servers" />}
+            path="/stackit/servers/:namespace/:name"
+            element={<ResourceDetail kind="servers" listPath="/stackit/servers" />}
           />
 
           <Route
-            path="/clusters"
-            element={<ResourceList kind="clusters" title="SKE Clusters" createPath="/clusters/new" />}
+            path="/stackit/clusters"
+            element={
+              <ResourceList
+                kind="clusters"
+                title="Clusters"
+                basePath="/stackit/clusters"
+                createPath="/stackit/clusters/new"
+              />
+            }
           />
-          <Route path="/clusters/new" element={<ClusterCreate />} />
+          <Route path="/stackit/clusters/new" element={<ClusterCreate />} />
           <Route
-            path="/clusters/:namespace/:name"
-            element={<ResourceDetail kind="clusters" listPath="/clusters" />}
+            path="/stackit/clusters/:namespace/:name"
+            element={<ResourceDetail kind="clusters" listPath="/stackit/clusters" />}
           />
+
+          <Route path="/paas" element={<Paas />} />
         </Routes>
       </div>
     </div>

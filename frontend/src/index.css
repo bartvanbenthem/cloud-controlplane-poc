@@ -69,6 +69,23 @@ a:hover {
   text-decoration: none;
 }
 
+.nav-group {
+  margin-top: 18px;
+}
+.nav-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim) !important;
+}
+.nav-group-label.active {
+  color: var(--text) !important;
+}
+.nav-child {
+  padding-left: 20px !important;
+}
+
 .main {
   flex: 1;
   padding: 28px 36px;
@@ -176,6 +193,38 @@ tbody tr:hover {
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.category-card {
+  display: block;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  color: var(--text);
+}
+.category-card:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.category-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.category-card p {
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+.category-stats {
+  display: flex;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--text-dim);
 }
 
 pre {

@@ -47,7 +47,7 @@ export function ServerCreate() {
           .filter(Boolean),
       };
       const created = await api.createServer(payload);
-      navigate(`/servers/${created.metadata.namespace}/${created.metadata.name}`);
+      navigate(`/stackit/servers/${created.metadata.namespace}/${created.metadata.name}`);
     } catch (e) {
       setError(String((e as Error).message ?? e));
       setSubmitting(false);

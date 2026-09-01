@@ -9,10 +9,12 @@ const POLL_INTERVAL_MS = 5000;
 export function ResourceList({
   kind,
   title,
+  basePath,
   createPath,
 }: {
   kind: Kind;
   title: string;
+  basePath: string;
   createPath: string;
 }) {
   const [items, setItems] = useState<CustomResource[] | null>(null);
@@ -71,7 +73,7 @@ export function ResourceList({
             {items.map((r) => (
               <tr key={`${r.metadata.namespace}/${r.metadata.name}`}>
                 <td>
-                  <Link to={`/${kind}/${r.metadata.namespace}/${r.metadata.name}`}>
+                  <Link to={`${basePath}/${r.metadata.namespace}/${r.metadata.name}`}>
                     {r.metadata.name}
                   </Link>
                 </td>
