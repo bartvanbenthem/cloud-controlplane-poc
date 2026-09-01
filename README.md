@@ -48,17 +48,59 @@ examples/org.yaml           Seed Group/User catalog entities
 
 ## Setup
 
-This was authored without a Node.js toolchain available in the build
-environment, so it has **not** been run through `yarn install` / `yarn dev`
-yet. Do that first and fix up anything a real Backstage version pulls in
-differently:
+This was originally authored without a Node.js toolchain available in the
+build environment, so the dependency versions were hand-picked rather than
+resolved — that surfaced a number of issues the first time it was actually
+installed and run (see "Known toolchain gotchas" below for what they were
+and why the fixes below are needed). The steps here reflect the working
+setup.
+
+### Prerequisites
+
+- **Node 22** — the project's `engines` field allows Node 20 or 22, but 22
+  is recommended: Node 20 combined with `node-gyp@13` hits a
+  `webidl.util.markAsUncloneable is not a function` bug when compiling
+  native modules (`better-sqlite3`, `isolated-vm`, `cpu-features`) from
+  source. If you don't already have Node 22, install it via
+  [nvm](https://github.com/nvm-sh/nvm):
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+  export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh"
+  nvm install 22 && nvm alias default 22
+  ```
+
+  This repo pins the version in `.nvmrc`, so `nvm use` picks it up
+  automatically once nvm is loaded in your shell.
+
+- **Corepack**, to get the exact Yarn release this repo pins
+  (`packageManager: yarn@4.4.1` in `package.json`). Node 22 ships it
+  bundled — just enable it once per Node install:
+
+  ```bash
+  corepack enable
+  ```
+
+  > On Debian/Ubuntu, watch out for `/usr/bin/yarn` — it's the unrelated
+  > `cmdtest` package's fake `yarn` binary, not Yarn Berry. If `yarn -v`
+  > doesn't print `4.4.1` after `corepack enable`, run `which -a yarn` and
+  > make sure the `nvm`-managed one comes first in `PATH`.
+
+### Install and run
 
 ```bash
-corepack enable   # or: npm i -g yarn
 yarn install
 ```
 
-Environment variables (put them in a `.env` or export before `yarn dev`):
+Yarn is configured to use the `node-modules` linker (`.yarnrc.yml`), not
+Plug'n'Play — Backstage's plugin ecosystem doesn't declare peer
+dependencies strictly enough for PnP's stricter resolution and throws
+"tried to access X but it isn't declared in its dependencies" errors
+under it.
+
+Environment variables, in a `.env` file at the repo root (auto-loaded by
+`packages/backend/src/index.ts` via `dotenv` — `@backstage/cli` does not
+load `.env` on its own, despite what you might expect):
 
 | Variable                    | Purpose                                                            |
 |------------------------------|---------------------------------------------------------------------|
@@ -79,10 +121,10 @@ anywhere shared).
 
 ### Before the templates work
 
-- Push this repo to GitHub and update the three `bartvanbenthem` /
-  `developer-portal` placeholders (`templates/*/template.yaml`'s
-  `allowedOwners`/`allowedRepos`, and `gitops-bootstrap/argocd-application.yaml`'s
-  `repoURL`) if it ends up under a different org/repo name.
+- `templates/*/template.yaml`'s `allowedOwners`/`allowedRepos` and
+  `gitops-bootstrap/argocd-application.yaml`'s `repoURL` are already set
+  for `bartvanbenthem/cloud-controlplane-poc`. If you fork this or rename
+  it again, update those three places to match.
 - `GITHUB_TOKEN` needs `repo` scope (classic) or Contents + Pull requests
   read/write (fine-grained) on that repo.
 
@@ -90,12 +132,40 @@ anywhere shared).
 
 - Follow `gitops-bootstrap/README.md`: install stackit-compute-operator and
   ArgoCD on a cluster, apply `gitops-bootstrap/argocd-application.yaml`.
+  Having the CRDs installed isn't enough — the operator's controller
+  actually has to be running, or created `Server`/`Cluster` resources will
+  just sit there unreconciled.
 - Create a Backstage-reading service account on that cluster (`get`/`list`/
   `watch` on `servers.compute.sostackit.dev`, `clusters.compute.sostackit.dev`,
   `volumes.compute.sostackit.dev`, `images.compute.sostackit.dev`,
   `networks.compute.sostackit.dev`, plus `pods`/core resources for the
   standard Kubernetes plugin views), and set `K8S_CLUSTER_URL` /
-  `K8S_SERVICE_ACCOUNT_TOKEN` from it.
+  `K8S_SERVICE_ACCOUNT_TOKEN` from it. `gitops-bootstrap/create-backstage-sa.sh`
+  automates this — it creates the namespace, ServiceAccount, ClusterRole/
+  ClusterRoleBinding, and a long-lived token Secret, then prints the two
+  values ready to paste into `.env`:
+
+  ```bash
+  ./gitops-bootstrap/create-backstage-sa.sh [namespace] [service-account-name]
+  ```
+
+### Known toolchain gotchas
+
+Fixed as part of getting this running for the first time; noted here in
+case a future dependency bump reintroduces them:
+
+- `@backstage/plugin-app-backend`'s version pin in
+  `packages/backend/package.json` pointed at a release that was never
+  published. Several other `@backstage/*` packages were on mutually
+  incompatible major versions too (symptom: the `catalog` plugin failing
+  to start with missing `serviceRef{core.permissionsRegistry}` /
+  `serviceRef{core.auditor}` errors). Run `yarn backstage-cli
+  versions:bump` to realign every `@backstage/*` package to a single
+  compatible release line.
+- `@material-ui/lab` (used for `Alert` in
+  `packages/app/src/components/catalog/EntityPage.tsx`) and
+  `better-sqlite3` (the `database.client` configured in `app-config.yaml`)
+  were both used but never declared as dependencies.
 
 ## Adding the other CRDs as full templates later
 

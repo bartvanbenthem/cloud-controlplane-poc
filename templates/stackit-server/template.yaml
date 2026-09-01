@@ -137,7 +137,7 @@ spec:
           ui:options:
             allowedHosts: [github.com]
             allowedOwners: [bartvanbenthem]
-            allowedRepos: [developer-portal]
+            allowedRepos: [cloud-controlplane-poc]
 
   steps:
     - id: fetch

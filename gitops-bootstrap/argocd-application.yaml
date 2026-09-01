@@ -14,8 +14,7 @@ spec:
   project: default
 
   source:
-    # PLACEHOLDER: update once this repo has a real GitHub remote.
-    repoURL: https://github.com/bartvanbenthem/developer-portal.git
+    repoURL: https://github.com/bartvanbenthem/cloud-controlplane-poc.git
     targetRevision: main
     path: gitops
     directory:

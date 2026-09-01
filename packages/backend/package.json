@@ -13,22 +13,24 @@
     "clean": "backstage-cli package clean"
   },
   "dependencies": {
-    "@backstage/backend-defaults": "^0.5.0",
-    "@backstage/plugin-app-backend": "^0.3.79",
-    "@backstage/plugin-auth-backend": "^0.24.0",
-    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.4",
-    "@backstage/plugin-catalog-backend": "^1.30.0",
-    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.2",
-    "@backstage/plugin-kubernetes-backend": "^0.19.0",
-    "@backstage/plugin-permission-backend": "^0.5.52",
-    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.4",
-    "@backstage/plugin-proxy-backend": "^0.5.10",
-    "@backstage/plugin-scaffolder-backend": "^1.28.0",
-    "@backstage/plugin-scaffolder-backend-module-github": "^0.5.0",
-    "@backstage/plugin-techdocs-backend": "^1.11.0",
-    "app": "^1.0.0"
+    "@backstage/backend-defaults": "^0.17.8",
+    "@backstage/plugin-app-backend": "^0.5.17",
+    "@backstage/plugin-auth-backend": "^0.30.0",
+    "@backstage/plugin-auth-backend-module-guest-provider": "^0.2.22",
+    "@backstage/plugin-catalog-backend": "^3.9.1",
+    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.23",
+    "@backstage/plugin-kubernetes-backend": "^0.21.10",
+    "@backstage/plugin-permission-backend": "^0.7.15",
+    "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.22",
+    "@backstage/plugin-proxy-backend": "^0.6.17",
+    "@backstage/plugin-scaffolder-backend": "^4.1.0",
+    "@backstage/plugin-scaffolder-backend-module-github": "^0.9.13",
+    "@backstage/plugin-techdocs-backend": "^2.2.4",
+    "app": "^1.0.0",
+    "better-sqlite3": "^12.4.1",
+    "dotenv": "^17.4.2"
   },
   "devDependencies": {
-    "@backstage/cli": "^0.29.0"
+    "@backstage/cli": "^0.36.5"
   }
 }
