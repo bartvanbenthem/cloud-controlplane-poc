@@ -1,4 +1,4 @@
-# Multi-cloud ControlPlane POC
+# Cloud ControlPlane POC
 
 POC project regarding a [Backstage](https://backstage.io) developer portal for provisioning and
 observing [stackit-compute-operator](https://github.com/bartvanbenthem/stackit-compute-operator)
