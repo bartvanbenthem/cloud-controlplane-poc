@@ -6,7 +6,7 @@ metadata:
   labels:
     backstage.io/kubernetes-id: ${{ values.name }}
     environment: ${{ values.environment }}
-    ${% if values.team %}team: ${{ values.team }}${% endif %}
+    {% if values.team %}team: ${{ values.team }}{% endif %}
 spec:
   projectId: ${{ values.projectId }}
   region: ${{ values.region }}
@@ -17,8 +17,8 @@ spec:
       machineImageName: ${{ values.poolMachineImageName }}
       machineImageVersion: '${{ values.poolMachineImageVersion }}'
       availabilityZones:
-        ${% for az in values.poolAvailabilityZones %}- ${{ az }}
-        ${% endfor %}
+        {% for az in values.poolAvailabilityZones %}- ${{ az }}
+        {% endfor %}
       minimum: ${{ values.poolMinimum }}
       maximum: ${{ values.poolMaximum }}
       allowSystemComponents: true

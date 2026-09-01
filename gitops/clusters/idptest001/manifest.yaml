@@ -6,7 +6,6 @@ metadata:
   labels:
     backstage.io/kubernetes-id: idptest001
     environment: dev
-    $
 spec:
   projectId: cc9fd01d-494c-4d8a-850a-cbc54939a006
   region: eu01
@@ -17,8 +16,7 @@ spec:
       machineImageName: flatcar
       machineImageVersion: '4593.2.2'
       availabilityZones:
-        $- eu01-1
-        $
+        - eu01-1
       minimum: 1
       maximum: 3
       allowSystemComponents: true

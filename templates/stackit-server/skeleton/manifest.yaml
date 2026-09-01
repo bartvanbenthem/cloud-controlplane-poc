@@ -6,26 +6,26 @@ metadata:
   labels:
     backstage.io/kubernetes-id: ${{ values.name }}
     environment: ${{ values.environment }}
-    ${% if values.team %}team: ${{ values.team }}${% endif %}
+    {% if values.team %}team: ${{ values.team }}{% endif %}
 spec:
   projectId: ${{ values.projectId }}
   region: ${{ values.region }}
   machineType: ${{ values.machineType }}
-  ${% if values.availabilityZone %}availabilityZone: ${{ values.availabilityZone }}${% endif %}
+  {% if values.availabilityZone %}availabilityZone: ${{ values.availabilityZone }}{% endif %}
   imageId: ${{ values.imageId }}
   networkId: ${{ values.networkId }}
   bootVolume:
     size: ${{ values.bootVolumeSize }}
-    ${% if values.bootVolumePerformanceClass %}performanceClass: ${{ values.bootVolumePerformanceClass }}${% endif %}
+    {% if values.bootVolumePerformanceClass %}performanceClass: ${{ values.bootVolumePerformanceClass }}{% endif %}
     deleteOnTermination: ${{ values.deleteBootVolumeOnTermination }}
-  ${% if values.keypairName %}keypairName: ${{ values.keypairName }}${% endif %}
-  ${% if values.securityGroups %}securityGroups:
-    ${% for sg in values.securityGroups %}- ${{ sg }}
-    ${% endfor %}${% endif %}
+  {% if values.keypairName %}keypairName: ${{ values.keypairName }}{% endif %}
+  {% if values.securityGroups %}securityGroups:
+    {% for sg in values.securityGroups %}- ${{ sg }}
+    {% endfor %}{% endif %}
   labels:
     environment: ${{ values.environment }}
-    ${% if values.team %}team: ${{ values.team }}${% endif %}
+    {% if values.team %}team: ${{ values.team }}{% endif %}
     managed-by: backstage
-  ${% if values.userData %}userData: |
-    ${{ values.userData }}${% endif %}
+  {% if values.userData %}userData: |
+    ${{ values.userData }}{% endif %}
   powerState: ${{ values.powerState }}
