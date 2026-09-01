@@ -71,7 +71,7 @@ catalog:
 
 # --- Kubernetes plugin -------------------------------------------------------
 # Surfaces live status of the CRDs the stackit-compute-operator manages
-# (Server, Cluster/SKE, and the supporting Volume/Image/Network kinds) on
+# (Server, Cluster/SKE, and the supporting Volume/Network kinds) on
 # each Component's "Kubernetes" tab, matched via the backstage.io/kubernetes-id
 # label the templates stamp onto every generated manifest.
 #
@@ -98,9 +98,6 @@ kubernetes:
     - group: 'compute.sostackit.dev'
       apiVersion: 'v1alpha1'
       plural: 'volumes'
-    - group: 'compute.sostackit.dev'
-      apiVersion: 'v1alpha1'
-      plural: 'images'
     - group: 'compute.sostackit.dev'
       apiVersion: 'v1alpha1'
       plural: 'networks'
