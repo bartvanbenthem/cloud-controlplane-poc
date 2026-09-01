@@ -3,7 +3,9 @@ import { NavLink } from "react-router-dom";
 export function Sidebar() {
   return (
     <div className="sidebar">
-      <h1>Cloud ControlPlane</h1>
+      <div className="brand">
+        <img src="/kpn-logo.svg" alt="KPN" className="brand-logo" />
+      </div>
       <nav>
         <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
           Dashboard

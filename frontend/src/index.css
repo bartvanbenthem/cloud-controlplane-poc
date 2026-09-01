@@ -43,10 +43,15 @@ a:hover {
   padding: 20px 16px;
 }
 
-.sidebar h1 {
-  font-size: 15px;
-  margin: 0 0 24px;
-  color: var(--text);
+.brand {
+  display: flex;
+  align-items: center;
+  margin: 0 0 28px;
+  padding: 0 2px;
+}
+.brand-logo {
+  height: 44px;
+  width: auto;
 }
 
 .sidebar nav a {
