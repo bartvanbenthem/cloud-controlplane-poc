@@ -1,0 +1,28 @@
+# Cluster-scoped because Server/Cluster resources can live in any
+# namespace and the portal lists across all of them; the actual grant is
+# still limited to these two CRDs plus read-only namespace listing (used
+# by the create-form namespace picker) — no core workload access at all.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: controlplane-portal
+rules:
+  - apiGroups: ["compute.sostackit.dev"]
+    resources: ["servers", "clusters"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: controlplane-portal
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: controlplane-portal
+subjects:
+  - kind: ServiceAccount
+    name: controlplane-portal
+    namespace: controlplane-portal

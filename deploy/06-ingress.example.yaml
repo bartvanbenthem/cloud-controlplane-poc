@@ -1,0 +1,21 @@
+# Optional. Copy to 06-ingress.yaml, set host/ingressClassName for your
+# cluster, and apply — or just `kubectl port-forward`/use a LoadBalancer
+# Service instead if you don't run an ingress controller.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: controlplane-portal
+  namespace: controlplane-portal
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: controlplane-portal.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: controlplane-portal
+                port:
+                  name: http
