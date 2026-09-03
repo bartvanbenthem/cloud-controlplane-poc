@@ -4,6 +4,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { RuntimeHome } from "./pages/RuntimeHome";
 import { DatabaseHome } from "./pages/DatabaseHome";
 import { ObservabilityHome } from "./pages/ObservabilityHome";
+import { MessagingHome } from "./pages/MessagingHome";
 import { Placeholder } from "./pages/Placeholder";
 import { ResourceList } from "./pages/ResourceList";
 import { ResourceDetail } from "./pages/ResourceDetail";
@@ -11,6 +12,8 @@ import { ClusterCreate } from "./pages/ClusterCreate";
 import { PostgresCreate } from "./pages/PostgresCreate";
 import { ValkeyCreate } from "./pages/ValkeyCreate";
 import { GrafanaCreate } from "./pages/GrafanaCreate";
+import { MariaDBCreate } from "./pages/MariaDBCreate";
+import { RabbitMQCreate } from "./pages/RabbitMQCreate";
 import type { CustomResource } from "./types";
 
 function summarizeCluster(r: CustomResource): string {
@@ -33,6 +36,18 @@ function summarizeValkey(r: CustomResource): string {
 function summarizeGrafana(r: CustomResource): string {
   const spec = r.spec as { replicas?: number; version?: string };
   return [`${spec.replicas ?? "?"} replica(s)`, spec.version].filter(Boolean).join(" · ");
+}
+
+function summarizeMariaDB(r: CustomResource): string {
+  const spec = r.spec as { replicas?: number; database?: { name?: string } };
+  return [`${spec.replicas ?? "?"} replica(s)`, spec.database?.name && `db ${spec.database.name}`]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function summarizeRabbitMQ(r: CustomResource): string {
+  const spec = r.spec as { replicas?: number };
+  return `${spec.replicas ?? "?"} replica(s)`;
 }
 
 export default function App() {
@@ -137,6 +152,25 @@ export default function App() {
             element={<ResourceDetail kind="valkeyclusters" listPath="/database/redis" />}
           />
 
+          <Route
+            path="/database/mariadb"
+            element={
+              <ResourceList
+                kind="mariadbclusters"
+                title="MariaDB Databases"
+                basePath="/database/mariadb"
+                createPath="/database/mariadb/new"
+                itemLabel="Database"
+                summarize={summarizeMariaDB}
+              />
+            }
+          />
+          <Route path="/database/mariadb/new" element={<MariaDBCreate />} />
+          <Route
+            path="/database/mariadb/:namespace/:name"
+            element={<ResourceDetail kind="mariadbclusters" listPath="/database/mariadb" />}
+          />
+
           {/* Observability */}
           <Route path="/observability" element={<ObservabilityHome />} />
 
@@ -159,17 +193,29 @@ export default function App() {
             element={<ResourceDetail kind="grafanainstances" listPath="/observability/monitoring" />}
           />
 
-          {/* Placeholder categories */}
+          {/* Messaging */}
+          <Route path="/messaging" element={<MessagingHome />} />
+
           <Route
-            path="/messaging"
+            path="/messaging/rabbitmq"
             element={
-              <Placeholder
-                title="Messaging"
-                tagline="Message queues and event streaming."
-                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              <ResourceList
+                kind="rabbitmqclusters"
+                title="RabbitMQ Brokers"
+                basePath="/messaging/rabbitmq"
+                createPath="/messaging/rabbitmq/new"
+                itemLabel="Broker"
+                summarize={summarizeRabbitMQ}
               />
             }
           />
+          <Route path="/messaging/rabbitmq/new" element={<RabbitMQCreate />} />
+          <Route
+            path="/messaging/rabbitmq/:namespace/:name"
+            element={<ResourceDetail kind="rabbitmqclusters" listPath="/messaging/rabbitmq" />}
+          />
+
+          {/* Placeholder categories */}
           <Route
             path="/network"
             element={

@@ -1,4 +1,10 @@
-export type Kind = "clusters" | "postgresclusters" | "valkeyclusters" | "grafanainstances";
+export type Kind =
+  | "clusters"
+  | "postgresclusters"
+  | "valkeyclusters"
+  | "mariadbclusters"
+  | "rabbitmqclusters"
+  | "grafanainstances";
 
 export interface Condition {
   type: string;
@@ -94,4 +100,32 @@ export interface GrafanaCreateRequest {
   replicas: number;
   persistenceSize?: string;
   persistenceStorageClass?: string;
+}
+
+export interface MariaDBCreateRequest {
+  name: string;
+  namespace: string;
+  replicas: number;
+  image?: string;
+  storageSize: string;
+  storageClass?: string;
+  databaseName: string;
+  databaseOwner: string;
+  requestsCpu?: string;
+  requestsMemory?: string;
+  limitsCpu?: string;
+  limitsMemory?: string;
+}
+
+export interface RabbitMQCreateRequest {
+  name: string;
+  namespace: string;
+  replicas: number;
+  image?: string;
+  storageSize: string;
+  storageClass?: string;
+  requestsCpu?: string;
+  requestsMemory?: string;
+  limitsCpu?: string;
+  limitsMemory?: string;
 }

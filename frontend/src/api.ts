@@ -4,7 +4,9 @@ import type {
   CustomResource,
   GrafanaCreateRequest,
   Kind,
+  MariaDBCreateRequest,
   PostgresCreateRequest,
+  RabbitMQCreateRequest,
   ValkeyCreateRequest,
 } from "./types";
 
@@ -74,6 +76,18 @@ export const api = {
 
   createGrafana: (body: GrafanaCreateRequest) =>
     request<CustomResource>("/api/resources/grafanainstances", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  createMariaDB: (body: MariaDBCreateRequest) =>
+    request<CustomResource>("/api/resources/mariadbclusters", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  createRabbitMQ: (body: RabbitMQCreateRequest) =>
+    request<CustomResource>("/api/resources/rabbitmqclusters", {
       method: "POST",
       body: JSON.stringify(body),
     }),

@@ -6,6 +6,7 @@ export function Dashboard() {
   const [clusterCount, setClusterCount] = useState<number | null>(null);
   const [databaseCount, setDatabaseCount] = useState<number | null>(null);
   const [observabilityCount, setObservabilityCount] = useState<number | null>(null);
+  const [messagingCount, setMessagingCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -13,12 +14,15 @@ export function Dashboard() {
       api.list("clusters"),
       api.list("postgresclusters"),
       api.list("valkeyclusters"),
+      api.list("mariadbclusters"),
       api.list("grafanainstances"),
+      api.list("rabbitmqclusters"),
     ])
-      .then(([clusters, postgres, valkey, grafana]) => {
+      .then(([clusters, postgres, valkey, mariadb, grafana, rabbitmq]) => {
         setClusterCount(clusters.length);
-        setDatabaseCount(postgres.length + valkey.length);
+        setDatabaseCount(postgres.length + valkey.length + mariadb.length);
         setObservabilityCount(grafana.length);
+        setMessagingCount(rabbitmq.length);
       })
       .catch((e) => setError(String(e.message ?? e)));
   }, []);
@@ -41,7 +45,7 @@ export function Dashboard() {
 
         <Link to="/database" className="category-card">
           <h3>Database</h3>
-          <p className="muted">PostgreSQL &amp; Redis</p>
+          <p className="muted">PostgreSQL, Redis &amp; MariaDB</p>
           <div className="category-stats">
             <span>{databaseCount ?? "…"} building blocks</span>
           </div>
@@ -57,9 +61,9 @@ export function Dashboard() {
 
         <Link to="/messaging" className="category-card">
           <h3>Messaging</h3>
-          <p className="muted">Message queues &amp; event streaming</p>
+          <p className="muted">RabbitMQ</p>
           <div className="category-stats">
-            <span className="muted">Not integrated yet</span>
+            <span>{messagingCount ?? "…"} brokers</span>
           </div>
         </Link>
 

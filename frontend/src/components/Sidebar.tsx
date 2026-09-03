@@ -76,6 +76,9 @@ export function Sidebar() {
           <NavLink to="/database/redis" className={childClass}>
             Redis
           </NavLink>
+          <NavLink to="/database/mariadb" className={childClass}>
+            MariaDB
+          </NavLink>
         </NavGroup>
 
         <NavGroup to="/observability" label="Observability">
@@ -84,11 +87,11 @@ export function Sidebar() {
           </NavLink>
         </NavGroup>
 
-        <div className="nav-group">
-          <NavLink to="/messaging" end className={groupLabelClass}>
-            Messaging
+        <NavGroup to="/messaging" label="Messaging">
+          <NavLink to="/messaging/rabbitmq" className={childClass}>
+            RabbitMQ
           </NavLink>
-        </div>
+        </NavGroup>
 
         <div className="nav-group">
           <NavLink to="/network" end className={groupLabelClass}>

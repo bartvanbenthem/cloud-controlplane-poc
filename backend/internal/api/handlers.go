@@ -160,6 +160,20 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		obj = req.toUnstructured()
+	case KindMariaDB:
+		req := &MariaDBRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
+			return
+		}
+		obj = req.toUnstructured()
+	case KindRabbitMQ:
+		req := &RabbitMQRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
+			return
+		}
+		obj = req.toUnstructured()
 	case KindGrafana:
 		req := &GrafanaRequest{}
 		if status, err := decodeAndValidate(r, req); err != nil {

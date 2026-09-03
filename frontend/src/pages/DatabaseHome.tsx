@@ -5,13 +5,19 @@ import { api } from "../api";
 export function DatabaseHome() {
   const [postgresCount, setPostgresCount] = useState<number | null>(null);
   const [valkeyCount, setValkeyCount] = useState<number | null>(null);
+  const [mariadbCount, setMariadbCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([api.list("postgresclusters"), api.list("valkeyclusters")])
-      .then(([p, v]) => {
+    Promise.all([
+      api.list("postgresclusters"),
+      api.list("valkeyclusters"),
+      api.list("mariadbclusters"),
+    ])
+      .then(([p, v, m]) => {
         setPostgresCount(p.length);
         setValkeyCount(v.length);
+        setMariadbCount(m.length);
       })
       .catch((e) => setError(String(e.message ?? e)));
   }, []);
@@ -48,6 +54,14 @@ export function DatabaseHome() {
           <p className="muted">Valkey, via project-easter's ValkeyCluster</p>
           <div className="category-stats">
             <span>{valkeyCount ?? "…"} caches</span>
+          </div>
+        </Link>
+
+        <Link to="/database/mariadb" className="category-card">
+          <h3>MariaDB</h3>
+          <p className="muted">mariadb-operator, via project-easter's MariaDBCluster</p>
+          <div className="category-stats">
+            <span>{mariadbCount ?? "…"} databases</span>
           </div>
         </Link>
       </div>

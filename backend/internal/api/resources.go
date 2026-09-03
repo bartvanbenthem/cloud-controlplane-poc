@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -25,6 +27,8 @@ const (
 	KindCluster  Kind = "clusters"         // STACKIT SKE — compute.sostackit.dev
 	KindPostgres Kind = "postgresclusters" // project-easter — paas.example.com
 	KindValkey   Kind = "valkeyclusters"   // project-easter — paas.example.com
+	KindMariaDB  Kind = "mariadbclusters"  // project-easter — paas.example.com
+	KindRabbitMQ Kind = "rabbitmqclusters" // project-easter — paas.example.com
 	KindGrafana  Kind = "grafanainstances" // project-easter — paas.example.com
 )
 
@@ -32,6 +36,8 @@ var kindGVRs = map[Kind]schema.GroupVersionResource{
 	KindCluster:  {Group: stackitGroup, Version: stackitVersion, Resource: string(KindCluster)},
 	KindPostgres: {Group: paasGroup, Version: paasVersion, Resource: string(KindPostgres)},
 	KindValkey:   {Group: paasGroup, Version: paasVersion, Resource: string(KindValkey)},
+	KindMariaDB:  {Group: paasGroup, Version: paasVersion, Resource: string(KindMariaDB)},
+	KindRabbitMQ: {Group: paasGroup, Version: paasVersion, Resource: string(KindRabbitMQ)},
 	KindGrafana:  {Group: paasGroup, Version: paasVersion, Resource: string(KindGrafana)},
 }
 
@@ -47,8 +53,12 @@ func (k Kind) gvr() schema.GroupVersionResource {
 func parseKind(s string) (Kind, error) {
 	k := Kind(s)
 	if !k.valid() {
-		return "", fmt.Errorf("unknown resource kind %q: must be one of %q, %q, %q, %q",
-			s, KindCluster, KindPostgres, KindValkey, KindGrafana)
+		names := make([]string, 0, len(kindGVRs))
+		for kind := range kindGVRs {
+			names = append(names, string(kind))
+		}
+		sort.Strings(names)
+		return "", fmt.Errorf("unknown resource kind %q: must be one of %s", s, strings.Join(names, ", "))
 	}
 	return k, nil
 }

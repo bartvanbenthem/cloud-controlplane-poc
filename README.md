@@ -16,14 +16,18 @@ the Dashboard:
     operator/CRD wired up yet.
 - **Database** — managed database/cache building blocks, via
   [project-easter](https://github.com/bartvanbenthem/project-easter) (a
-  meta-operator fronting CloudNativePG, valkey-operator, and
-  grafana-operator with its own thin `paas.example.com/v1alpha1` CRDs):
+  meta-operator fronting CloudNativePG, valkey-operator,
+  mariadb-operator, RabbitMQ Cluster Operator, and grafana-operator with
+  its own thin `paas.example.com/v1alpha1` CRDs):
   - **PostgreSQL** — `PostgresCluster`
   - **Redis** — `ValkeyCluster` (Valkey)
+  - **MariaDB** — `MariaDBCluster`
 - **Observability** — also via project-easter:
   - **Monitoring** — `GrafanaInstance`
-- **Messaging**, **Network**, **Security** — placeholders for this POC.
-  No operator/CRD wired up yet.
+- **Messaging** — also via project-easter:
+  - **RabbitMQ** — `RabbitMQCluster`
+- **Network**, **Security** — placeholders for this POC. No operator/CRD
+  wired up yet.
 
 This repo previously contained a Backstage-based version of this idea
 (scaffolder templates opening PRs into a `gitops/` dir for ArgoCD to
@@ -35,28 +39,30 @@ case.
 ## How it works
 
 - **Backend** (`backend/`, Go + [client-go](https://github.com/kubernetes/client-go)):
-  a REST API using a `dynamic.Interface` client against four CRDs across
+  a REST API using a `dynamic.Interface` client against six CRDs across
   two API groups — `compute.sostackit.dev/v1alpha1` `Cluster`, and
-  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`GrafanaInstance`
+  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`MariaDBCluster`/`RabbitMQCluster`/`GrafanaInstance`
   — via `GET/POST /api/resources/{kind}`, `GET/DELETE .../{namespace}/{name}`,
   plus `GET /api/namespaces`. Runs in-cluster under its own ServiceAccount
   (falls back to `$KUBECONFIG` / `~/.kube/config` for local dev), and
   serves the built frontend itself (embedded via `go:embed`) — one binary,
   one container.
 - **Frontend** (`frontend/`, React + Vite + TypeScript): list/detail/create
-  pages for Clusters and the three Database/Observability building blocks,
-  polling every 5s for status. OpenShift, VMware, AKS, Messaging, Network,
-  and Security are static placeholder pages — no backend calls. No build
-  step at runtime — it's static files served by the Go backend.
+  pages for Clusters and the five Database/Observability/Messaging
+  building blocks, polling every 5s for status. OpenShift, VMware, AKS,
+  Network, and Security are static placeholder pages — no backend calls.
+  No build step at runtime — it's static files served by the Go backend.
 - **Auth**: a single shared HTTP Basic Auth credential in front of the
   whole API (`AUTH_USERNAME`/`AUTH_PASSWORD` env vars — see
   `deploy/03-secret.example.yaml`), *not* per-user Kubernetes RBAC. Every
   write goes through the one ServiceAccount's permissions
   (`deploy/02-rbac.yaml`), scoped to `get/list/watch/create/delete` on
-  those four resource types and `get/list` on `namespaces` — nothing
+  those six resource types and `get/list` on `namespaces` — nothing
   else, and no access to the vendor CRDs (CNPG's `Cluster`,
-  valkey-operator's `ValkeyCluster`, grafana-operator's `Grafana`) that
-  project-easter's own ServiceAccount reconciles the paas CRs into. If
+  valkey-operator's `ValkeyCluster`, mariadb-operator's `MariaDB`,
+  RabbitMQ Cluster Operator's `RabbitmqCluster`, grafana-operator's
+  `Grafana`) that project-easter's own ServiceAccount reconciles the
+  paas CRs into. If
   you need writes attributed to the real user (audit trail, per-user
   RBAC), swap this for OIDC + Kubernetes impersonation — that's a
   meaningfully bigger change, not a config flag.
@@ -123,13 +129,14 @@ controlplane-portal 8080:80` works fine for a POC.
   changes.
 - Of stackit-compute-operator's CRDs, only `Cluster` is exposed —
   `Server`/`Volume`/`Network` aren't wired up here.
-- OpenShift, VMware, AKS, Messaging, Network, and Security are
+- OpenShift, VMware, AKS, Network, and Security are
   navigation/page scaffolding only — no operator, CRD, or API behind them
   yet.
 - The `Cluster` form only configures one node pool at creation time;
   additional pools can be added with `kubectl` after the cluster exists.
-- The Database/Observability forms cover the fields project-easter's own
-  CRDs expose (deliberately minimal per its README's "Scope" section) —
-  anything beyond that (CNPG backups/pooling, Valkey TLS/ACLs, Grafana
+- The Database/Observability/Messaging forms cover the fields
+  project-easter's own CRDs expose (deliberately minimal per its
+  README's "Scope" section) — anything beyond that (CNPG backups/pooling,
+  Valkey TLS/ACLs, MariaDB Galera tuning, RabbitMQ plugins/TLS, Grafana
   ingress/SMTP, etc.) is out of scope here the same way it's out of
   scope for project-easter itself.
