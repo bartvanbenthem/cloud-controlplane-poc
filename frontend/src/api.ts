@@ -2,8 +2,10 @@ import type {
   ApiError,
   ClusterCreateRequest,
   CustomResource,
+  GrafanaCreateRequest,
   Kind,
-  ServerCreateRequest,
+  PostgresCreateRequest,
+  ValkeyCreateRequest,
 } from "./types";
 
 class RequestError extends Error {
@@ -52,14 +54,26 @@ export const api = {
       { method: "DELETE" },
     ),
 
-  createServer: (body: ServerCreateRequest) =>
-    request<CustomResource>("/api/resources/servers", {
+  createCluster: (body: ClusterCreateRequest) =>
+    request<CustomResource>("/api/resources/clusters", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
-  createCluster: (body: ClusterCreateRequest) =>
-    request<CustomResource>("/api/resources/clusters", {
+  createPostgres: (body: PostgresCreateRequest) =>
+    request<CustomResource>("/api/resources/postgresclusters", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  createValkey: (body: ValkeyCreateRequest) =>
+    request<CustomResource>("/api/resources/valkeyclusters", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  createGrafana: (body: GrafanaCreateRequest) =>
+    request<CustomResource>("/api/resources/grafanainstances", {
       method: "POST",
       body: JSON.stringify(body),
     }),

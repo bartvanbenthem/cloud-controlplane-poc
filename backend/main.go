@@ -1,6 +1,6 @@
 // Command portal-backend serves the cloud-controlplane portal: a REST API
-// over the compute.sostackit.dev Server/Cluster CRDs (backed by a
-// dynamic Kubernetes client) plus the built React frontend, as one static
+// over the compute.sostackit.dev Cluster CRD (backed by a dynamic
+// Kubernetes client) plus the built React frontend, as one static
 // binary/container.
 package main
 

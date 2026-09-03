@@ -1,7 +1,6 @@
 // Package api implements the portal's HTTP API: CRUD over the
-// compute.sostackit.dev Server and Cluster custom resources via a
-// Kubernetes dynamic client, plus a namespace listing used by the create
-// forms.
+// compute.sostackit.dev Cluster custom resource via a Kubernetes dynamic
+// client, plus a namespace listing used by the create form.
 package api
 
 import (
@@ -109,6 +108,28 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// createBody is what every kind's *Request type implements: decode target,
+// apply defaults, then self-validate.
+type createBody interface {
+	applyDefaults()
+	validate() error
+	toUnstructured() *unstructured.Unstructured
+}
+
+// decodeAndValidate decodes r's JSON body into dst, applies its defaults,
+// and validates it. status is the HTTP status to respond with on failure,
+// zero on success.
+func decodeAndValidate[T createBody](r *http.Request, dst T) (status int, err error) {
+	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
+		return http.StatusBadRequest, errors.New("invalid JSON body")
+	}
+	dst.applyDefaults()
+	if err := dst.validate(); err != nil {
+		return http.StatusUnprocessableEntity, err
+	}
+	return 0, nil
+}
+
 func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 	kind, err := parseKind(r.PathValue("kind"))
 	if err != nil {
@@ -118,27 +139,31 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	var obj *unstructured.Unstructured
 	switch kind {
-	case KindServer:
-		var req ServerRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
-			return
-		}
-		req.applyDefaults()
-		if err := req.validate(); err != nil {
-			writeError(w, http.StatusUnprocessableEntity, err)
+	case KindCluster:
+		req := &ClusterRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
 			return
 		}
 		obj = req.toUnstructured()
-	case KindCluster:
-		var req ClusterRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
+	case KindPostgres:
+		req := &PostgresRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
 			return
 		}
-		req.applyDefaults()
-		if err := req.validate(); err != nil {
-			writeError(w, http.StatusUnprocessableEntity, err)
+		obj = req.toUnstructured()
+	case KindValkey:
+		req := &ValkeyRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
+			return
+		}
+		obj = req.toUnstructured()
+	case KindGrafana:
+		req := &GrafanaRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
 			return
 		}
 		obj = req.toUnstructured()

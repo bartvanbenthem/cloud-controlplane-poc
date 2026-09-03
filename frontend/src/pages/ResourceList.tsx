@@ -11,11 +11,17 @@ export function ResourceList({
   title,
   basePath,
   createPath,
+  itemLabel,
+  summarize,
 }: {
   kind: Kind;
   title: string;
   basePath: string;
   createPath: string;
+  /** Singular name of one item, e.g. "Cluster" — used for the "+ New …" button. */
+  itemLabel: string;
+  /** Renders the compact spec summary shown in the table's Summary column. */
+  summarize: (r: CustomResource) => string;
 }) {
   const [items, setItems] = useState<CustomResource[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +52,7 @@ export function ResourceList({
       <div className="page-header">
         <h2>{title}</h2>
         <Link className="btn" to={createPath}>
-          + New {kind === "servers" ? "Server" : "Cluster"}
+          + New {itemLabel}
         </Link>
       </div>
 
@@ -78,7 +84,7 @@ export function ResourceList({
                   </Link>
                 </td>
                 <td className="muted">{r.metadata.namespace}</td>
-                <td className="muted">{summarize(kind, r)}</td>
+                <td className="muted">{summarize(r)}</td>
                 <td>
                   <StatusBadge resource={r} />
                 </td>
@@ -90,14 +96,6 @@ export function ResourceList({
       )}
     </>
   );
-}
-
-function summarize(kind: Kind, r: CustomResource): string {
-  const spec = r.spec as Record<string, unknown>;
-  if (kind === "servers") {
-    return [spec.machineType, spec.region].filter(Boolean).join(" · ");
-  }
-  return [`k8s ${spec.kubernetesVersion}`, spec.region].filter(Boolean).join(" · ");
 }
 
 function age(ts?: string): string {

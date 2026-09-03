@@ -1,14 +1,20 @@
-# Cluster-scoped because Server/Cluster resources can live in any
-# namespace and the portal lists across all of them; the actual grant is
-# still limited to these two CRDs plus read-only namespace listing (used
-# by the create-form namespace picker) — no core workload access at all.
+# Cluster-scoped because these resources can live in any namespace and the
+# portal lists across all of them; the actual grant is still limited to
+# these CRDs plus read-only namespace listing (used by the create-form
+# namespace picker) — no core workload access at all, and no access to the
+# vendor CRDs (CNPG's Cluster, valkey-operator's ValkeyCluster,
+# grafana-operator's Grafana) these paas.example.com CRs front — that's
+# project-easter's own ServiceAccount's job, not this portal's.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: controlplane-portal
 rules:
   - apiGroups: ["compute.sostackit.dev"]
-    resources: ["servers", "clusters"]
+    resources: ["clusters"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: ["paas.example.com"]
+    resources: ["postgresclusters", "valkeyclusters", "grafanainstances"]
     verbs: ["get", "list", "watch", "create", "delete"]
   - apiGroups: [""]
     resources: ["namespaces"]

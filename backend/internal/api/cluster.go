@@ -162,7 +162,7 @@ func (r ClusterRequest) toUnstructured() *unstructured.Unstructured {
 
 	obj := &unstructured.Unstructured{}
 	obj.SetUnstructuredContent(map[string]interface{}{
-		"apiVersion": group + "/" + version,
+		"apiVersion": stackitGroup + "/" + stackitVersion,
 		"kind":       "Cluster",
 		"metadata": map[string]interface{}{
 			"name":      r.Name,

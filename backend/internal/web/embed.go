@@ -14,8 +14,8 @@ import (
 var distFS embed.FS
 
 // Handler returns an http.Handler serving the embedded frontend, with SPA
-// fallback to index.html for unknown paths (so e.g. /servers/foo loads the
-// app instead of 404ing on a browser refresh).
+// fallback to index.html for unknown paths (so e.g. /runtime/stackit/foo
+// loads the app instead of 404ing on a browser refresh).
 func Handler() http.Handler {
 	sub, err := fs.Sub(distFS, "dist")
 	if err != nil {

@@ -1,11 +1,26 @@
-# Cloud ControlPlane Portal
+# CCP — Cloud ControlPlane Portal
 
-A self-service web portal for `stackit-compute-operator` resources —
-STACKIT Compute Engine `Server`s and STACKIT Kubernetes Engine (SKE)
-`Cluster`s (`compute.sostackit.dev/v1alpha1`) — that runs on Kubernetes and
-talks **directly** to the Kubernetes API. No GitOps PR round trip, no
-external catalog: the CRDs in etcd are the only state, and this is just a
-UI over them.
+A multi-cloud self-service web portal that runs on Kubernetes and talks
+**directly** to the Kubernetes API. No GitOps PR round trip, no external
+catalog: the CRDs in etcd are the only state, and this is just a UI over
+them.
+
+The sidebar is organized around two top-level categories, in addition to
+the Dashboard:
+
+- **Runtime** — where workloads actually run. Currently:
+  - **STACKIT** (working) — STACKIT Kubernetes Engine (SKE) `Cluster`s
+    (`compute.sostackit.dev/v1alpha1`), managed via
+    [stackit-compute-operator](https://github.com/bartvanbenthem/stackit-compute-operator).
+  - **OpenShift**, **VMware** — placeholders for this POC. No operator/CRD
+    wired up yet.
+- **PaaS** — KPN PaaS building blocks, managed via
+  [project-easter](https://github.com/bartvanbenthem/project-easter) (a
+  meta-operator fronting CloudNativePG, valkey-operator, and
+  grafana-operator with its own thin `paas.example.com/v1alpha1` CRDs):
+  - **PostgreSQL** — `PostgresCluster`
+  - **Redis** — `ValkeyCluster` (Valkey)
+  - **Monitoring** — `GrafanaInstance`
 
 This repo previously contained a Backstage-based version of this idea
 (scaffolder templates opening PRs into a `gitops/` dir for ArgoCD to
@@ -17,28 +32,35 @@ case.
 ## How it works
 
 - **Backend** (`backend/`, Go + [client-go](https://github.com/kubernetes/client-go)):
-  a REST API using a `dynamic.Interface` client against the
-  `compute.sostackit.dev` CRDs — `GET/POST /api/resources/{servers,clusters}`,
-  `GET/DELETE .../{namespace}/{name}`, plus `GET /api/namespaces`. Runs
-  in-cluster under its own ServiceAccount (falls back to `$KUBECONFIG` /
-  `~/.kube/config` for local dev), and serves the built frontend itself
-  (embedded via `go:embed`) — one binary, one container.
+  a REST API using a `dynamic.Interface` client against four CRDs across
+  two API groups — `compute.sostackit.dev/v1alpha1` `Cluster`, and
+  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`GrafanaInstance`
+  — via `GET/POST /api/resources/{kind}`, `GET/DELETE .../{namespace}/{name}`,
+  plus `GET /api/namespaces`. Runs in-cluster under its own ServiceAccount
+  (falls back to `$KUBECONFIG` / `~/.kube/config` for local dev), and
+  serves the built frontend itself (embedded via `go:embed`) — one binary,
+  one container.
 - **Frontend** (`frontend/`, React + Vite + TypeScript): list/detail/create
-  pages for Servers and Clusters, polling every 5s for status. No build
-  step at runtime — it's static files served by the Go backend.
+  pages for Clusters and the three PaaS building blocks, polling every 5s
+  for status. OpenShift and VMware are static placeholder pages — no
+  backend calls. No build step at runtime — it's static files served by
+  the Go backend.
 - **Auth**: a single shared HTTP Basic Auth credential in front of the
   whole API (`AUTH_USERNAME`/`AUTH_PASSWORD` env vars — see
   `deploy/03-secret.example.yaml`), *not* per-user Kubernetes RBAC. Every
   write goes through the one ServiceAccount's permissions
   (`deploy/02-rbac.yaml`), scoped to `get/list/watch/create/delete` on
-  `servers`/`clusters` and `get/list` on `namespaces` — nothing else. If
+  those four resource types and `get/list` on `namespaces` — nothing
+  else, and no access to the vendor CRDs (CNPG's `Cluster`,
+  valkey-operator's `ValkeyCluster`, grafana-operator's `Grafana`) that
+  project-easter's own ServiceAccount reconciles the paas CRs into. If
   you need writes attributed to the real user (audit trail, per-user
   RBAC), swap this for OIDC + Kubernetes impersonation — that's a
   meaningfully bigger change, not a config flag.
-- **Writes are direct and immediate**: submitting the create form applies
-  the `Server`/`Cluster` object straight to the API server. There's no
-  review-before-apply step — Kubernetes' audit log and the object's
-  `resourceVersion` history are the trail, not a merged PR.
+- **Writes are direct and immediate**: submitting a create form applies
+  the object straight to the API server. There's no review-before-apply
+  step — Kubernetes' audit log and the object's `resourceVersion` history
+  are the trail, not a merged PR.
 
 ## Repository layout
 
@@ -96,9 +118,14 @@ controlplane-portal 8080:80` works fine for a POC.
 - No live watch/streaming — the UI polls every 5s rather than using a
   Kubernetes watch, which is simpler but means up to a 5s lag on status
   changes.
-- Create forms only cover `Server` and `Cluster` (matching the two
-  Backstage templates this replaces) — `Volume`/`Network` objects the
-  operator also manages aren't exposed here, same as before.
-- The `Cluster` form only configures one node pool at creation time, same
-  scope as the Backstage template it replaces; additional pools can be
-  added with `kubectl` after the cluster exists.
+- Of stackit-compute-operator's CRDs, only `Cluster` is exposed —
+  `Server`/`Volume`/`Network` aren't wired up here.
+- OpenShift and VMware are navigation/page scaffolding only — no
+  operator, CRD, or API behind them yet.
+- The `Cluster` form only configures one node pool at creation time;
+  additional pools can be added with `kubectl` after the cluster exists.
+- The PaaS forms cover the fields project-easter's own CRDs expose
+  (deliberately minimal per its README's "Scope" section) — anything
+  beyond that (CNPG backups/pooling, Valkey TLS/ACLs, Grafana
+  ingress/SMTP, etc.) is out of scope here the same way it's out of
+  scope for project-easter itself.

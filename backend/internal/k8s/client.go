@@ -1,6 +1,6 @@
 // Package k8s builds the Kubernetes clients the portal uses to talk to the
-// API server: a dynamic client for the compute.sostackit.dev CRDs (Server,
-// Cluster) and a typed clientset for the small amount of core-API access
+// API server: a dynamic client for the compute.sostackit.dev Cluster CRD
+// and a typed clientset for the small amount of core-API access
 // (namespace listing) the UI needs.
 package k8s
 

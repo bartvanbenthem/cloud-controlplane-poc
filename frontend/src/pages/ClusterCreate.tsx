@@ -49,7 +49,7 @@ export function ClusterCreate() {
           .filter(Boolean),
       };
       const created = await api.createCluster(payload);
-      navigate(`/stackit/clusters/${created.metadata.namespace}/${created.metadata.name}`);
+      navigate(`/runtime/stackit/${created.metadata.namespace}/${created.metadata.name}`);
     } catch (e) {
       setError(String((e as Error).message ?? e));
       setSubmitting(false);

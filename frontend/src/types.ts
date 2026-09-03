@@ -1,4 +1,4 @@
-export type Kind = "servers" | "clusters";
+export type Kind = "clusters" | "postgresclusters" | "valkeyclusters" | "grafanainstances";
 
 export interface Condition {
   type: string;
@@ -17,9 +17,10 @@ export interface ObjectMeta {
   uid?: string;
 }
 
-/** A Server or Cluster custom resource as returned by the API — spec/status
- * shape is whatever the stackit-compute-operator writes, so both are kept
- * loosely typed rather than mirrored field-for-field here. */
+/** A Cluster/PostgresCluster/ValkeyCluster/GrafanaInstance custom resource
+ * as returned by the API — spec/status shape is whatever the owning
+ * operator writes, so it's kept loosely typed rather than mirrored
+ * field-for-field here. */
 export interface CustomResource {
   apiVersion: string;
   kind: string;
@@ -33,26 +34,6 @@ export interface CustomResource {
 
 export interface ApiError {
   error: string;
-}
-
-export interface ServerCreateRequest {
-  name: string;
-  namespace: string;
-  projectId: string;
-  region: string;
-  machineType: string;
-  availabilityZone?: string;
-  powerState: "Active" | "Inactive";
-  imageId: string;
-  bootVolumeSize: number;
-  bootVolumePerformanceClass?: string;
-  deleteBootVolumeOnTermination: boolean;
-  networkId: string;
-  keypairName?: string;
-  securityGroups: string[];
-  userData?: string;
-  environment: "dev" | "staging" | "prod";
-  team?: string;
 }
 
 export interface ClusterCreateRequest {
@@ -75,4 +56,42 @@ export interface ClusterCreateRequest {
   maintenanceEnd?: string;
   environment: "dev" | "staging" | "prod";
   team?: string;
+}
+
+export interface PostgresCreateRequest {
+  name: string;
+  namespace: string;
+  instances: number;
+  image?: string;
+  storageSize: string;
+  storageClass?: string;
+  databaseName: string;
+  databaseOwner: string;
+  requestsCpu?: string;
+  requestsMemory?: string;
+  limitsCpu?: string;
+  limitsMemory?: string;
+}
+
+export interface ValkeyCreateRequest {
+  name: string;
+  namespace: string;
+  shards: number;
+  replicas: number;
+  image?: string;
+  persistenceSize: string;
+  persistenceStorageClass?: string;
+  requestsCpu?: string;
+  requestsMemory?: string;
+  limitsCpu?: string;
+  limitsMemory?: string;
+}
+
+export interface GrafanaCreateRequest {
+  name: string;
+  namespace: string;
+  version?: string;
+  replicas: number;
+  persistenceSize?: string;
+  persistenceStorageClass?: string;
 }

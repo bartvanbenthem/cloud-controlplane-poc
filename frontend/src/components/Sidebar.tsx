@@ -1,6 +1,9 @@
 import { NavLink } from "react-router-dom";
 
 const linkClass = ({ isActive }: { isActive: boolean }) => (isActive ? "active" : "");
+const childClass = ({ isActive }: { isActive: boolean }) => `nav-child ${linkClass({ isActive })}`;
+const groupLabelClass = ({ isActive }: { isActive: boolean }) =>
+  `nav-group-label ${linkClass({ isActive })}`;
 
 export function Sidebar() {
   return (
@@ -14,20 +17,32 @@ export function Sidebar() {
         </NavLink>
 
         <div className="nav-group">
-          <NavLink to="/stackit" end className={({ isActive }) => `nav-group-label ${linkClass({ isActive })}`}>
-            STACKIT
+          <NavLink to="/runtime" end className={groupLabelClass}>
+            Runtime
           </NavLink>
-          <NavLink to="/stackit/servers" className={({ isActive }) => `nav-child ${linkClass({ isActive })}`}>
-            Servers
+          <NavLink to="/runtime/stackit" className={childClass}>
+            SKE
           </NavLink>
-          <NavLink to="/stackit/clusters" className={({ isActive }) => `nav-child ${linkClass({ isActive })}`}>
-            Clusters
+          <NavLink to="/runtime/openshift" className={childClass}>
+            OCP
+          </NavLink>
+          <NavLink to="/runtime/vmware" className={childClass}>
+            VKS
           </NavLink>
         </div>
 
         <div className="nav-group">
-          <NavLink to="/paas" end className={({ isActive }) => `nav-group-label ${linkClass({ isActive })}`}>
+          <NavLink to="/paas" end className={groupLabelClass}>
             PaaS
+          </NavLink>
+          <NavLink to="/paas/postgresql" className={childClass}>
+            PostgreSQL
+          </NavLink>
+          <NavLink to="/paas/redis" className={childClass}>
+            Redis
+          </NavLink>
+          <NavLink to="/paas/monitoring" className={childClass}>
+            Monitoring
           </NavLink>
         </div>
       </nav>
