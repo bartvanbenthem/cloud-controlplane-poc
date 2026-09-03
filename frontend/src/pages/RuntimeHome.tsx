@@ -47,6 +47,14 @@ export function RuntimeHome() {
             <span className="muted">Not integrated yet</span>
           </div>
         </Link>
+
+        <Link to="/runtime/aks" className="category-card">
+          <h3>AKS</h3>
+          <p className="muted">Azure Kubernetes Service</p>
+          <div className="category-stats">
+            <span className="muted">Not integrated yet</span>
+          </div>
+        </Link>
       </div>
     </>
   );

@@ -2,7 +2,8 @@ import { Route, Routes } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar";
 import { Dashboard } from "./pages/Dashboard";
 import { RuntimeHome } from "./pages/RuntimeHome";
-import { PaasHome } from "./pages/PaasHome";
+import { DatabaseHome } from "./pages/DatabaseHome";
+import { ObservabilityHome } from "./pages/ObservabilityHome";
 import { Placeholder } from "./pages/Placeholder";
 import { ResourceList } from "./pages/ResourceList";
 import { ResourceDetail } from "./pages/ResourceDetail";
@@ -84,65 +85,110 @@ export default function App() {
               />
             }
           />
+          <Route
+            path="/runtime/aks"
+            element={
+              <Placeholder
+                title="AKS"
+                tagline="Azure Kubernetes Service."
+                body="Not integrated yet — this is a placeholder for the POC. Only STACKIT is wired up to an operator right now."
+              />
+            }
+          />
 
-          {/* PaaS */}
-          <Route path="/paas" element={<PaasHome />} />
+          {/* Database */}
+          <Route path="/database" element={<DatabaseHome />} />
 
           <Route
-            path="/paas/postgresql"
+            path="/database/postgresql"
             element={
               <ResourceList
                 kind="postgresclusters"
                 title="PostgreSQL Databases"
-                basePath="/paas/postgresql"
-                createPath="/paas/postgresql/new"
+                basePath="/database/postgresql"
+                createPath="/database/postgresql/new"
                 itemLabel="Database"
                 summarize={summarizePostgres}
               />
             }
           />
-          <Route path="/paas/postgresql/new" element={<PostgresCreate />} />
+          <Route path="/database/postgresql/new" element={<PostgresCreate />} />
           <Route
-            path="/paas/postgresql/:namespace/:name"
-            element={<ResourceDetail kind="postgresclusters" listPath="/paas/postgresql" />}
+            path="/database/postgresql/:namespace/:name"
+            element={<ResourceDetail kind="postgresclusters" listPath="/database/postgresql" />}
           />
 
           <Route
-            path="/paas/redis"
+            path="/database/redis"
             element={
               <ResourceList
                 kind="valkeyclusters"
                 title="Redis Caches"
-                basePath="/paas/redis"
-                createPath="/paas/redis/new"
+                basePath="/database/redis"
+                createPath="/database/redis/new"
                 itemLabel="Cache"
                 summarize={summarizeValkey}
               />
             }
           />
-          <Route path="/paas/redis/new" element={<ValkeyCreate />} />
+          <Route path="/database/redis/new" element={<ValkeyCreate />} />
           <Route
-            path="/paas/redis/:namespace/:name"
-            element={<ResourceDetail kind="valkeyclusters" listPath="/paas/redis" />}
+            path="/database/redis/:namespace/:name"
+            element={<ResourceDetail kind="valkeyclusters" listPath="/database/redis" />}
           />
 
+          {/* Observability */}
+          <Route path="/observability" element={<ObservabilityHome />} />
+
           <Route
-            path="/paas/monitoring"
+            path="/observability/monitoring"
             element={
               <ResourceList
                 kind="grafanainstances"
                 title="Monitoring Instances"
-                basePath="/paas/monitoring"
-                createPath="/paas/monitoring/new"
+                basePath="/observability/monitoring"
+                createPath="/observability/monitoring/new"
                 itemLabel="Instance"
                 summarize={summarizeGrafana}
               />
             }
           />
-          <Route path="/paas/monitoring/new" element={<GrafanaCreate />} />
+          <Route path="/observability/monitoring/new" element={<GrafanaCreate />} />
           <Route
-            path="/paas/monitoring/:namespace/:name"
-            element={<ResourceDetail kind="grafanainstances" listPath="/paas/monitoring" />}
+            path="/observability/monitoring/:namespace/:name"
+            element={<ResourceDetail kind="grafanainstances" listPath="/observability/monitoring" />}
+          />
+
+          {/* Placeholder categories */}
+          <Route
+            path="/messaging"
+            element={
+              <Placeholder
+                title="Messaging"
+                tagline="Message queues and event streaming."
+                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              />
+            }
+          />
+          <Route
+            path="/network"
+            element={
+              <Placeholder
+                title="Network"
+                tagline="Networking building blocks."
+                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              />
+            }
+          />
+          <Route
+            path="/security"
+            element={
+              <Placeholder
+                title="Security"
+                tagline="Security and secrets building blocks."
+                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              />
+            }
           />
         </Routes>
       </div>

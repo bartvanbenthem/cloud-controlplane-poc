@@ -33,7 +33,7 @@ export function ValkeyCreate() {
     setError(null);
     try {
       const created = await api.createValkey(form);
-      navigate(`/paas/redis/${created.metadata.namespace}/${created.metadata.name}`);
+      navigate(`/database/redis/${created.metadata.namespace}/${created.metadata.name}`);
     } catch (e) {
       setError(String((e as Error).message ?? e));
       setSubmitting(false);

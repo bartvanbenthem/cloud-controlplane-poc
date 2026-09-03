@@ -28,7 +28,7 @@ export function GrafanaCreate() {
     setError(null);
     try {
       const created = await api.createGrafana(form);
-      navigate(`/paas/monitoring/${created.metadata.namespace}/${created.metadata.name}`);
+      navigate(`/observability/monitoring/${created.metadata.namespace}/${created.metadata.name}`);
     } catch (e) {
       setError(String((e as Error).message ?? e));
       setSubmitting(false);

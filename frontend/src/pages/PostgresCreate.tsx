@@ -34,7 +34,7 @@ export function PostgresCreate() {
     setError(null);
     try {
       const created = await api.createPostgres(form);
-      navigate(`/paas/postgresql/${created.metadata.namespace}/${created.metadata.name}`);
+      navigate(`/database/postgresql/${created.metadata.namespace}/${created.metadata.name}`);
     } catch (e) {
       setError(String((e as Error).message ?? e));
       setSubmitting(false);
