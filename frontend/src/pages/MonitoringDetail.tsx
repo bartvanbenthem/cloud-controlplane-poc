@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api, RequestError } from "../api";
 import type { CustomResource } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
+import { CredentialsPanel } from "../components/CredentialsPanel";
 
 /** Grafana and Prometheus are installed together by MonitoringCreate and
  * neither is useful without the other (Grafana has nothing to query,
@@ -109,6 +110,10 @@ export function MonitoringDetail() {
       </div>
 
       <ResourceHalf title="Grafana" kindLabel="GrafanaInstance" resource={grafana} />
+      {grafana && (
+        <CredentialsPanel kind="grafanainstances" namespace={grafana.metadata.namespace} name={grafana.metadata.name} />
+      )}
+
       <ResourceHalf title="Prometheus" kindLabel="PrometheusInstance" resource={prometheus} />
     </>
   );

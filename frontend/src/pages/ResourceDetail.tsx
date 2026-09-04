@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import type { CustomResource, Kind } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
+import { CredentialsPanel, hasCredentials } from "../components/CredentialsPanel";
 
 export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: string }) {
   const { namespace = "", name = "" } = useParams();
@@ -70,6 +71,10 @@ export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: strin
           </span>
         </p>
       </div>
+
+      {hasCredentials(kind) && (
+        <CredentialsPanel kind={kind} namespace={resource.metadata.namespace} name={resource.metadata.name} />
+      )}
 
       {resource.status?.conditions && resource.status.conditions.length > 0 && (
         <div className="panel">

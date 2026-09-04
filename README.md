@@ -68,8 +68,9 @@ case.
   `deploy/03-secret.example.yaml`), *not* per-user Kubernetes RBAC. Every
   write goes through the one ServiceAccount's permissions
   (`deploy/02-rbac.yaml`), scoped to `get/list/watch/create/delete` on
-  those seven resource types and `get/list` on `namespaces` — nothing
-  else, and no access to the vendor CRDs (CNPG's `Cluster`,
+  those seven resource types, `get/list` on `namespaces`, and `get`
+  (only — no `list`/`watch`) on `secrets` (see Credentials below) —
+  nothing else, and no access to the vendor CRDs (CNPG's `Cluster`,
   valkey-operator's `ValkeyCluster`, mariadb-operator's `MariaDB`,
   RabbitMQ Cluster Operator's `RabbitmqCluster`, grafana-operator's
   `Grafana`, Prometheus Operator's `Prometheus`) that project-easter's
@@ -81,6 +82,21 @@ case.
   the object straight to the API server. There's no review-before-apply
   step — Kubernetes' audit log and the object's `resourceVersion` history
   are the trail, not a merged PR.
+- **Credentials**: the PostgreSQL/MariaDB/RabbitMQ/Monitoring detail pages
+  show a Credentials panel reading out the bootstrap-user Secret the
+  underlying vendor operator auto-generates
+  (`<name>-app`/`<name>-root`/`<name>-default-user`/`<name>-admin-credentials`
+  — see `backend/internal/api/credentials.go`), with password/URI fields
+  masked behind a per-field Show/Hide toggle. ValkeyCluster and
+  PrometheusInstance have no auth configured, so they don't get one. This
+  is why the portal's ServiceAccount has `get` on core `secrets`: RBAC
+  can't scope `get` to only secrets matching a name pattern, so in
+  principle this ServiceAccount can read any Secret by name in any
+  namespace it can see — the backend only ever constructs those specific
+  derived names itself and never accepts an arbitrary secret name from a
+  client, but that's an application-level constraint, not one RBAC
+  enforces. Worth knowing before deploying this into a cluster with
+  unrelated secrets you'd rather this ServiceAccount not be able to read.
 
 ## Repository layout
 

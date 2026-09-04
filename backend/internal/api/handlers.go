@@ -37,6 +37,7 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/resources/{kind}", s.handleCreate)
 	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}", s.handleGet)
 	mux.HandleFunc("DELETE /api/resources/{kind}/{namespace}/{name}", s.handleDelete)
+	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}/credentials", s.handleGetCredentials)
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {

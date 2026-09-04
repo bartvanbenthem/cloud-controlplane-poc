@@ -1,12 +1,24 @@
 # Cluster-scoped because these resources can live in any namespace and the
 # portal lists across all of them; the actual grant is still limited to
-# these CRDs plus read-only namespace listing (used by the create-form
-# namespace picker) — no core workload access at all, and no access to the
-# vendor CRDs (CNPG's Cluster, valkey-operator's ValkeyCluster,
-# mariadb-operator's MariaDB, RabbitMQ Cluster Operator's RabbitmqCluster,
-# grafana-operator's Grafana, Prometheus Operator's Prometheus) these
-# paas.example.com CRs front — that's project-easter's own ServiceAccount's
-# job, not this portal's.
+# these CRDs plus read-only namespace/secret access — no core workload
+# access at all, and no access to the vendor CRDs (CNPG's Cluster,
+# valkey-operator's ValkeyCluster, mariadb-operator's MariaDB, RabbitMQ
+# Cluster Operator's RabbitmqCluster, grafana-operator's Grafana,
+# Prometheus Operator's Prometheus) these paas.example.com CRs front —
+# that's project-easter's own ServiceAccount's job, not this portal's.
+#
+# The "secrets"/get grant is a deliberate, narrow exception to "no core
+# workload access": it backs the credentials panel on the
+# PostgresCluster/MariaDBCluster/RabbitMQCluster/GrafanaInstance detail
+# pages (see backend/internal/api/credentials.go), which reads the vendor
+# operator's own auto-generated bootstrap-credentials Secret
+# (`<name>-app`/`<name>-root`/`<name>-default-user`/`<name>-admin-credentials`).
+# RBAC has no way to scope "get" to only secrets matching a name pattern,
+# so in principle this SA can `get` any Secret by name in any namespace —
+# the backend API only ever constructs those specific derived names itself
+# and never accepts an arbitrary secret name from a client, but that's an
+# application-level constraint, not one RBAC enforces. This SA still has
+# no "list"/"watch" on secrets, so it can't enumerate them.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -29,6 +41,9 @@ rules:
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

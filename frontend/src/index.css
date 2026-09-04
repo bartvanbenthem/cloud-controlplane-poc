@@ -330,3 +330,35 @@ form legend {
   gap: 10px;
   margin-top: 20px;
 }
+
+.credential-set {
+  margin-bottom: 16px;
+}
+.credential-set:last-child {
+  margin-bottom: 0;
+}
+.credential-set h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.credential-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+.btn-link:hover {
+  text-decoration: underline;
+}

@@ -43,6 +43,26 @@ export interface ApiError {
   error: string;
 }
 
+export interface CredentialField {
+  label: string;
+  value: string;
+  sensitive: boolean;
+}
+
+export interface CredentialSet {
+  label: string;
+  fields: CredentialField[];
+}
+
+/** Response shape for GET .../credentials. `pending` means the vendor
+ * operator hasn't written the credentials Secret yet (resource still
+ * provisioning) — the endpoint 404s instead for a kind with no
+ * credentials at all. */
+export interface CredentialsResponse {
+  sets: CredentialSet[];
+  pending: boolean;
+}
+
 export interface ClusterCreateRequest {
   name: string;
   namespace: string;

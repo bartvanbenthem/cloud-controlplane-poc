@@ -1,6 +1,7 @@
 import type {
   ApiError,
   ClusterCreateRequest,
+  CredentialsResponse,
   CustomResource,
   GrafanaCreateRequest,
   Kind,
@@ -55,6 +56,11 @@ export const api = {
     request<void>(
       `/api/resources/${kind}/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`,
       { method: "DELETE" },
+    ),
+
+  getCredentials: (kind: Kind, namespace: string, name: string) =>
+    request<CredentialsResponse>(
+      `/api/resources/${kind}/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}/credentials`,
     ),
 
   createCluster: (body: ClusterCreateRequest) =>
