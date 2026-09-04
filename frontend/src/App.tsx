@@ -15,6 +15,7 @@ import { MariaDBCreate } from "./pages/MariaDBCreate";
 import { RabbitMQCreate } from "./pages/RabbitMQCreate";
 import { MonitoringList } from "./pages/MonitoringList";
 import { MonitoringCreate } from "./pages/MonitoringCreate";
+import { MonitoringDetail } from "./pages/MonitoringDetail";
 import type { CustomResource } from "./types";
 
 function summarizeCluster(r: CustomResource): string {
@@ -171,18 +172,12 @@ export default function App() {
           <Route path="/observability" element={<ObservabilityHome />} />
 
           {/* Monitoring covers both GrafanaInstance and PrometheusInstance
-              under one list/create function, since they're the same
-              operational concern — see MonitoringList/MonitoringCreate. */}
+              under one install/list/detail/delete function, since neither
+              is useful without the other — see
+              MonitoringList/MonitoringCreate/MonitoringDetail. */}
           <Route path="/observability/monitoring" element={<MonitoringList />} />
           <Route path="/observability/monitoring/new" element={<MonitoringCreate />} />
-          <Route
-            path="/observability/monitoring/grafana/:namespace/:name"
-            element={<ResourceDetail kind="grafanainstances" listPath="/observability/monitoring" />}
-          />
-          <Route
-            path="/observability/monitoring/prometheus/:namespace/:name"
-            element={<ResourceDetail kind="prometheusinstances" listPath="/observability/monitoring" />}
-          />
+          <Route path="/observability/monitoring/:namespace/:name" element={<MonitoringDetail />} />
 
           {/* Messaging */}
           <Route path="/messaging" element={<MessagingHome />} />

@@ -2,31 +2,77 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { CustomResource } from "../types";
-import { StatusBadge } from "../components/StatusBadge";
 
 const POLL_INTERVAL_MS = 5000;
 
-type MonitoringKind = "grafana" | "prometheus";
-
-interface MonitoringItem {
-  kind: MonitoringKind;
-  resource: CustomResource;
+interface MonitoringInstance {
+  namespace: string;
+  name: string;
+  grafana?: CustomResource;
+  prometheus?: CustomResource;
 }
 
-function summarize(item: MonitoringItem): string {
-  if (item.kind === "grafana") {
-    const spec = item.resource.spec as { replicas?: number; version?: string };
-    return [`${spec.replicas ?? "?"} replica(s)`, spec.version].filter(Boolean).join(" · ");
+function readyCondition(r?: CustomResource) {
+  return r?.status?.conditions?.find((c) => c.type === "Ready");
+}
+
+/** Both GrafanaInstance and PrometheusInstance have to be Ready for
+ * monitoring to actually work, so the list shows one combined status per
+ * instance rather than two independent badges — see MonitoringDetail for
+ * why they're also deleted together. */
+function CombinedStatusBadge({ instance }: { instance: MonitoringInstance }) {
+  if (!instance.grafana || !instance.prometheus) {
+    return (
+      <span className="badge warn" title="Grafana and Prometheus should always be created together">
+        <span className="dot" />
+        Incomplete
+      </span>
+    );
   }
-  const spec = item.resource.spec as { replicas?: number; retention?: string };
-  return [`${spec.replicas ?? "?"} replica(s)`, spec.retention].filter(Boolean).join(" · ");
+
+  const grafanaReady = readyCondition(instance.grafana);
+  const prometheusReady = readyCondition(instance.prometheus);
+
+  if (!grafanaReady || !prometheusReady) {
+    return (
+      <span className="badge unknown">
+        <span className="dot" />
+        Unknown
+      </span>
+    );
+  }
+
+  const bothTrue = grafanaReady.status === "True" && prometheusReady.status === "True";
+  const eitherFalse = grafanaReady.status === "False" || prometheusReady.status === "False";
+  const cls = bothTrue ? "ok" : eitherFalse ? "err" : "warn";
+  const label = bothTrue ? "Ready" : eitherFalse ? "Not Ready" : "Unknown";
+  const title = `Grafana: ${grafanaReady.status}${grafanaReady.message ? ` (${grafanaReady.message})` : ""} · Prometheus: ${prometheusReady.status}${prometheusReady.message ? ` (${prometheusReady.message})` : ""}`;
+
+  return (
+    <span className={`badge ${cls}`} title={title}>
+      <span className="dot" />
+      {label}
+    </span>
+  );
 }
 
-/** Lists both Monitoring resource kinds project-easter fronts —
- * GrafanaInstance and PrometheusInstance — in one table, since they're kept
- * under a single "Monitoring" nav entry rather than split into two pages. */
+function summarize(instance: MonitoringInstance): string {
+  const grafanaSpec = instance.grafana?.spec as { replicas?: number } | undefined;
+  const prometheusSpec = instance.prometheus?.spec as { replicas?: number; retention?: string } | undefined;
+  return [
+    grafanaSpec && `Grafana ${grafanaSpec.replicas ?? "?"}`,
+    prometheusSpec && `Prometheus ${prometheusSpec.replicas ?? "?"}${prometheusSpec.retention ? ` (${prometheusSpec.retention})` : ""}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** Lists Monitoring instances — a GrafanaInstance + PrometheusInstance pair,
+ * project-easter's thin fronts for grafana-operator and the Prometheus
+ * Operator — merged by namespace/name into one row each, since the two are
+ * installed, viewed, and deleted together as a single monitoring stack. */
 export function MonitoringList() {
-  const [items, setItems] = useState<MonitoringItem[] | null>(null);
+  const [instances, setInstances] = useState<MonitoringInstance[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,11 +81,22 @@ export function MonitoringList() {
       Promise.all([api.list("grafanainstances"), api.list("prometheusinstances")])
         .then(([grafana, prometheus]) => {
           if (cancelled) return;
-          const merged: MonitoringItem[] = [
-            ...grafana.map((resource) => ({ kind: "grafana" as const, resource })),
-            ...prometheus.map((resource) => ({ kind: "prometheus" as const, resource })),
-          ].sort((a, b) => a.resource.metadata.name.localeCompare(b.resource.metadata.name));
-          setItems(merged);
+          const byKey = new Map<string, MonitoringInstance>();
+          const keyOf = (r: CustomResource) => `${r.metadata.namespace}/${r.metadata.name}`;
+          for (const r of grafana) {
+            byKey.set(keyOf(r), { namespace: r.metadata.namespace, name: r.metadata.name, grafana: r });
+          }
+          for (const r of prometheus) {
+            const key = keyOf(r);
+            const existing = byKey.get(key);
+            if (existing) {
+              existing.prometheus = r;
+            } else {
+              byKey.set(key, { namespace: r.metadata.namespace, name: r.metadata.name, prometheus: r });
+            }
+          }
+          const merged = [...byKey.values()].sort((a, b) => a.name.localeCompare(b.name));
+          setInstances(merged);
           setError(null);
         })
         .catch((e) => !cancelled && setError(String(e.message ?? e)));
@@ -63,9 +120,9 @@ export function MonitoringList() {
 
       {error && <div className="error-banner">{error}</div>}
 
-      {items === null ? (
+      {instances === null ? (
         <p className="muted">Loading…</p>
-      ) : items.length === 0 ? (
+      ) : instances.length === 0 ? (
         <p className="empty-state">
           Nothing here yet. <Link to="/observability/monitoring/new">Install monitoring</Link>.
         </p>
@@ -74,7 +131,6 @@ export function MonitoringList() {
           <thead>
             <tr>
               <th>Name</th>
-              <th>Type</th>
               <th>Namespace</th>
               <th>Summary</th>
               <th>Status</th>
@@ -82,22 +138,21 @@ export function MonitoringList() {
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => (
-              <tr key={`${item.kind}/${item.resource.metadata.namespace}/${item.resource.metadata.name}`}>
+            {instances.map((instance) => (
+              <tr key={`${instance.namespace}/${instance.name}`}>
                 <td>
-                  <Link
-                    to={`/observability/monitoring/${item.kind}/${item.resource.metadata.namespace}/${item.resource.metadata.name}`}
-                  >
-                    {item.resource.metadata.name}
+                  <Link to={`/observability/monitoring/${instance.namespace}/${instance.name}`}>
+                    {instance.name}
                   </Link>
                 </td>
-                <td className="muted">{item.kind === "grafana" ? "Grafana" : "Prometheus"}</td>
-                <td className="muted">{item.resource.metadata.namespace}</td>
-                <td className="muted">{summarize(item)}</td>
+                <td className="muted">{instance.namespace}</td>
+                <td className="muted">{summarize(instance)}</td>
                 <td>
-                  <StatusBadge resource={item.resource} />
+                  <CombinedStatusBadge instance={instance} />
                 </td>
-                <td className="muted">{age(item.resource.metadata.creationTimestamp)}</td>
+                <td className="muted">
+                  {age((instance.grafana ?? instance.prometheus)?.metadata.creationTimestamp)}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -53,13 +53,15 @@ case.
 - **Frontend** (`frontend/`, React + Vite + TypeScript): list/detail/create
   pages for Clusters and the six Database/Observability/Messaging
   building blocks, polling every 5s for status. GrafanaInstance and
-  PrometheusInstance are treated as one "Monitoring" building block:
-  `MonitoringCreate` installs both together (one name/namespace, one
-  submit, one `GrafanaInstance` + one `PrometheusInstance`) and
-  `MonitoringList` lists both in a single table tagged by kind, rather
-  than splitting them into two pages. OpenShift, VMware, AKS, Network,
-  and Security are static placeholder pages — no backend calls. No
-  build step at
+  PrometheusInstance are treated as one "Monitoring" building block
+  end to end, since neither is useful without the other: `MonitoringCreate`
+  installs both together (one name/namespace, one submit), `MonitoringList`
+  merges them into one row per instance with a combined status (Ready only
+  once both are), and `MonitoringDetail` shows both halves' status/conditions
+  on one page behind a single Delete button that removes both — there's no
+  per-component delete, so monitoring can't be left half-torn-down. OpenShift,
+  VMware, AKS, Network, and Security are static placeholder pages — no
+  backend calls. No build step at
   runtime — it's static files served by the Go backend.
 - **Auth**: a single shared HTTP Basic Auth credential in front of the
   whole API (`AUTH_USERNAME`/`AUTH_PASSWORD` env vars — see
