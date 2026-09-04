@@ -26,6 +26,10 @@ type RabbitMQRequest struct {
 	RequestsMemory string `json:"requestsMemory,omitempty"`
 	LimitsCPU      string `json:"limitsCpu,omitempty"`
 	LimitsMemory   string `json:"limitsMemory,omitempty"`
+
+	IngressHost          string `json:"ingressHost,omitempty"`
+	IngressClassName     string `json:"ingressClassName,omitempty"`
+	IngressTLSSecretName string `json:"ingressTlsSecretName,omitempty"`
 }
 
 func (r *RabbitMQRequest) applyDefaults() {
@@ -50,6 +54,9 @@ func (r RabbitMQRequest) validate() error {
 	if err := requireNonEmpty("storageSize", r.StorageSize); err != nil {
 		return err
 	}
+	if r.IngressHost == "" && (r.IngressClassName != "" || r.IngressTLSSecretName != "") {
+		return fmt.Errorf("ingressHost is required when ingress class or TLS secret is set")
+	}
 	return nil
 }
 
@@ -68,6 +75,9 @@ func (r RabbitMQRequest) toUnstructured() *unstructured.Unstructured {
 	}
 	if resources := buildResources(r.RequestsCPU, r.RequestsMemory, r.LimitsCPU, r.LimitsMemory); resources != nil {
 		spec["resources"] = resources
+	}
+	if r.IngressHost != "" {
+		spec["ingress"] = buildIngress(r.IngressHost, r.IngressClassName, r.IngressTLSSecretName)
 	}
 
 	obj := &unstructured.Unstructured{}

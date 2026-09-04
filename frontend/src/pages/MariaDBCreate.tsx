@@ -16,6 +16,8 @@ const initial: MariaDBCreateRequest = {
   requestsMemory: "",
   limitsCpu: "",
   limitsMemory: "",
+  enablePodMonitor: true,
+  exposeType: "",
 };
 
 export function MariaDBCreate() {
@@ -195,6 +197,34 @@ export function MariaDBCreate() {
                 value={form.limitsMemory}
                 onChange={(e) => set("limitsMemory", e.target.value)}
               />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Networking &amp; monitoring (optional)</legend>
+          <div className="form-grid">
+            <div className="field">
+              <label>Expose primary endpoint</label>
+              <select
+                value={form.exposeType}
+                onChange={(e) => set("exposeType", e.target.value as typeof form.exposeType)}
+              >
+                <option value="">Cluster-internal only</option>
+                <option value="LoadBalancer">LoadBalancer</option>
+                <option value="NodePort">NodePort</option>
+              </select>
+            </div>
+            <div className="field">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.enablePodMonitor}
+                  onChange={(e) => set("enablePodMonitor", e.target.checked)}
+                  style={{ marginRight: 8 }}
+                />
+                Enable Prometheus PodMonitor
+              </label>
             </div>
           </div>
         </fieldset>

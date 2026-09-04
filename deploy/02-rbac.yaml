@@ -4,8 +4,9 @@
 # namespace picker) — no core workload access at all, and no access to the
 # vendor CRDs (CNPG's Cluster, valkey-operator's ValkeyCluster,
 # mariadb-operator's MariaDB, RabbitMQ Cluster Operator's RabbitmqCluster,
-# grafana-operator's Grafana) these paas.example.com CRs front — that's
-# project-easter's own ServiceAccount's job, not this portal's.
+# grafana-operator's Grafana, Prometheus Operator's Prometheus) these
+# paas.example.com CRs front — that's project-easter's own ServiceAccount's
+# job, not this portal's.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -22,6 +23,7 @@ rules:
         "mariadbclusters",
         "rabbitmqclusters",
         "grafanainstances",
+        "prometheusinstances",
       ]
     verbs: ["get", "list", "watch", "create", "delete"]
   - apiGroups: [""]

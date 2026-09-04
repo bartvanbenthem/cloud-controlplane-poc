@@ -15,6 +15,7 @@ const initial: ValkeyCreateRequest = {
   requestsMemory: "",
   limitsCpu: "",
   limitsMemory: "",
+  exposeType: "",
 };
 
 export function ValkeyCreate() {
@@ -176,6 +177,23 @@ export function ValkeyCreate() {
                 value={form.limitsMemory}
                 onChange={(e) => set("limitsMemory", e.target.value)}
               />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Networking (optional)</legend>
+          <div className="form-grid">
+            <div className="field">
+              <label>Expose data-plane port</label>
+              <select
+                value={form.exposeType}
+                onChange={(e) => set("exposeType", e.target.value as typeof form.exposeType)}
+              >
+                <option value="">Cluster-internal only</option>
+                <option value="LoadBalancer">LoadBalancer</option>
+                <option value="NodePort">NodePort</option>
+              </select>
             </div>
           </div>
         </fieldset>

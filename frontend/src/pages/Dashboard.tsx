@@ -16,12 +16,13 @@ export function Dashboard() {
       api.list("valkeyclusters"),
       api.list("mariadbclusters"),
       api.list("grafanainstances"),
+      api.list("prometheusinstances"),
       api.list("rabbitmqclusters"),
     ])
-      .then(([clusters, postgres, valkey, mariadb, grafana, rabbitmq]) => {
+      .then(([clusters, postgres, valkey, mariadb, grafana, prometheus, rabbitmq]) => {
         setClusterCount(clusters.length);
         setDatabaseCount(postgres.length + valkey.length + mariadb.length);
-        setObservabilityCount(grafana.length);
+        setObservabilityCount(grafana.length + prometheus.length);
         setMessagingCount(rabbitmq.length);
       })
       .catch((e) => setError(String(e.message ?? e)));
@@ -53,7 +54,7 @@ export function Dashboard() {
 
         <Link to="/observability" className="category-card">
           <h3>Observability</h3>
-          <p className="muted">Monitoring</p>
+          <p className="muted">Monitoring — Grafana &amp; Prometheus</p>
           <div className="category-stats">
             <span>{observabilityCount ?? "…"} instances</span>
           </div>

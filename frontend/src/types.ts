@@ -4,7 +4,8 @@ export type Kind =
   | "valkeyclusters"
   | "mariadbclusters"
   | "rabbitmqclusters"
-  | "grafanainstances";
+  | "grafanainstances"
+  | "prometheusinstances";
 
 export interface Condition {
   type: string;
@@ -77,6 +78,8 @@ export interface PostgresCreateRequest {
   requestsMemory?: string;
   limitsCpu?: string;
   limitsMemory?: string;
+  enablePodMonitor: boolean;
+  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export interface ValkeyCreateRequest {
@@ -91,6 +94,7 @@ export interface ValkeyCreateRequest {
   requestsMemory?: string;
   limitsCpu?: string;
   limitsMemory?: string;
+  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export interface GrafanaCreateRequest {
@@ -100,6 +104,9 @@ export interface GrafanaCreateRequest {
   replicas: number;
   persistenceSize?: string;
   persistenceStorageClass?: string;
+  ingressHost?: string;
+  ingressClassName?: string;
+  ingressTlsSecretName?: string;
 }
 
 export interface MariaDBCreateRequest {
@@ -115,6 +122,8 @@ export interface MariaDBCreateRequest {
   requestsMemory?: string;
   limitsCpu?: string;
   limitsMemory?: string;
+  enablePodMonitor: boolean;
+  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export interface RabbitMQCreateRequest {
@@ -128,4 +137,24 @@ export interface RabbitMQCreateRequest {
   requestsMemory?: string;
   limitsCpu?: string;
   limitsMemory?: string;
+  ingressHost?: string;
+  ingressClassName?: string;
+  ingressTlsSecretName?: string;
+}
+
+export interface PrometheusCreateRequest {
+  name: string;
+  namespace: string;
+  version?: string;
+  replicas: number;
+  retention?: string;
+  storageSize?: string;
+  storageClass?: string;
+  requestsCpu?: string;
+  requestsMemory?: string;
+  limitsCpu?: string;
+  limitsMemory?: string;
+  ingressHost?: string;
+  ingressClassName?: string;
+  ingressTlsSecretName?: string;
 }

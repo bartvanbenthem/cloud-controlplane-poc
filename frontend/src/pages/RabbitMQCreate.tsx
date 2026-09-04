@@ -14,6 +14,9 @@ const initial: RabbitMQCreateRequest = {
   requestsMemory: "",
   limitsCpu: "",
   limitsMemory: "",
+  ingressHost: "",
+  ingressClassName: "",
+  ingressTlsSecretName: "",
 };
 
 export function RabbitMQCreate() {
@@ -168,6 +171,40 @@ export function RabbitMQCreate() {
                 placeholder="e.g. 1Gi"
                 value={form.limitsMemory}
                 onChange={(e) => set("limitsMemory", e.target.value)}
+              />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Management UI ingress (optional)</legend>
+          <div className="form-grid">
+            <div className="field">
+              <label>Host</label>
+              <input
+                type="text"
+                placeholder="e.g. rabbitmq.example.com"
+                value={form.ingressHost}
+                onChange={(e) => set("ingressHost", e.target.value)}
+              />
+              <p className="hint">Leave empty to skip creating an Ingress.</p>
+            </div>
+            <div className="field">
+              <label>Ingress class</label>
+              <input
+                type="text"
+                placeholder="Leave empty for the cluster default"
+                value={form.ingressClassName}
+                onChange={(e) => set("ingressClassName", e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label>TLS secret name</label>
+              <input
+                type="text"
+                placeholder="Leave empty for plain HTTP"
+                value={form.ingressTlsSecretName}
+                onChange={(e) => set("ingressTlsSecretName", e.target.value)}
               />
             </div>
           </div>

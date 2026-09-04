@@ -3,13 +3,12 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 
 export function ObservabilityHome() {
-  const [grafanaCount, setGrafanaCount] = useState<number | null>(null);
+  const [monitoringCount, setMonitoringCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api
-      .list("grafanainstances")
-      .then((g) => setGrafanaCount(g.length))
+    Promise.all([api.list("grafanainstances"), api.list("prometheusinstances")])
+      .then(([grafana, prometheus]) => setMonitoringCount(grafana.length + prometheus.length))
       .catch((e) => setError(String(e.message ?? e)));
   }, []);
 
@@ -34,9 +33,12 @@ export function ObservabilityHome() {
       <div className="category-grid">
         <Link to="/observability/monitoring" className="category-card">
           <h3>Monitoring</h3>
-          <p className="muted">Grafana, via project-easter's GrafanaInstance</p>
+          <p className="muted">
+            Grafana &amp; Prometheus, via project-easter's GrafanaInstance and
+            PrometheusInstance
+          </p>
           <div className="category-stats">
-            <span>{grafanaCount ?? "…"} instances</span>
+            <span>{monitoringCount ?? "…"} instances</span>
           </div>
         </Link>
       </div>

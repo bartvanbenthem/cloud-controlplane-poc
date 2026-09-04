@@ -6,6 +6,7 @@ import type {
   Kind,
   MariaDBCreateRequest,
   PostgresCreateRequest,
+  PrometheusCreateRequest,
   RabbitMQCreateRequest,
   ValkeyCreateRequest,
 } from "./types";
@@ -88,6 +89,12 @@ export const api = {
 
   createRabbitMQ: (body: RabbitMQCreateRequest) =>
     request<CustomResource>("/api/resources/rabbitmqclusters", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  createPrometheus: (body: PrometheusCreateRequest) =>
+    request<CustomResource>("/api/resources/prometheusinstances", {
       method: "POST",
       body: JSON.stringify(body),
     }),

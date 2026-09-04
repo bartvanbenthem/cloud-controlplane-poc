@@ -11,9 +11,10 @@ import { ResourceDetail } from "./pages/ResourceDetail";
 import { ClusterCreate } from "./pages/ClusterCreate";
 import { PostgresCreate } from "./pages/PostgresCreate";
 import { ValkeyCreate } from "./pages/ValkeyCreate";
-import { GrafanaCreate } from "./pages/GrafanaCreate";
 import { MariaDBCreate } from "./pages/MariaDBCreate";
 import { RabbitMQCreate } from "./pages/RabbitMQCreate";
+import { MonitoringList } from "./pages/MonitoringList";
+import { MonitoringCreate } from "./pages/MonitoringCreate";
 import type { CustomResource } from "./types";
 
 function summarizeCluster(r: CustomResource): string {
@@ -31,11 +32,6 @@ function summarizePostgres(r: CustomResource): string {
 function summarizeValkey(r: CustomResource): string {
   const spec = r.spec as { shards?: number; replicas?: number };
   return `${spec.shards ?? "?"} shard(s) · ${spec.replicas ?? 0} replica(s) each`;
-}
-
-function summarizeGrafana(r: CustomResource): string {
-  const spec = r.spec as { replicas?: number; version?: string };
-  return [`${spec.replicas ?? "?"} replica(s)`, spec.version].filter(Boolean).join(" · ");
 }
 
 function summarizeMariaDB(r: CustomResource): string {
@@ -174,23 +170,18 @@ export default function App() {
           {/* Observability */}
           <Route path="/observability" element={<ObservabilityHome />} />
 
+          {/* Monitoring covers both GrafanaInstance and PrometheusInstance
+              under one list/create function, since they're the same
+              operational concern — see MonitoringList/MonitoringCreate. */}
+          <Route path="/observability/monitoring" element={<MonitoringList />} />
+          <Route path="/observability/monitoring/new" element={<MonitoringCreate />} />
           <Route
-            path="/observability/monitoring"
-            element={
-              <ResourceList
-                kind="grafanainstances"
-                title="Monitoring Instances"
-                basePath="/observability/monitoring"
-                createPath="/observability/monitoring/new"
-                itemLabel="Instance"
-                summarize={summarizeGrafana}
-              />
-            }
-          />
-          <Route path="/observability/monitoring/new" element={<GrafanaCreate />} />
-          <Route
-            path="/observability/monitoring/:namespace/:name"
+            path="/observability/monitoring/grafana/:namespace/:name"
             element={<ResourceDetail kind="grafanainstances" listPath="/observability/monitoring" />}
+          />
+          <Route
+            path="/observability/monitoring/prometheus/:namespace/:name"
+            element={<ResourceDetail kind="prometheusinstances" listPath="/observability/monitoring" />}
           />
 
           {/* Messaging */}

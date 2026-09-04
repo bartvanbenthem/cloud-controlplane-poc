@@ -20,6 +20,10 @@ type GrafanaRequest struct {
 
 	PersistenceSize         string `json:"persistenceSize,omitempty"`
 	PersistenceStorageClass string `json:"persistenceStorageClass,omitempty"`
+
+	IngressHost          string `json:"ingressHost,omitempty"`
+	IngressClassName     string `json:"ingressClassName,omitempty"`
+	IngressTLSSecretName string `json:"ingressTlsSecretName,omitempty"`
 }
 
 func (r *GrafanaRequest) applyDefaults() {
@@ -37,6 +41,9 @@ func (r GrafanaRequest) validate() error {
 	}
 	if r.Replicas < 0 {
 		return fmt.Errorf("replicas cannot be negative")
+	}
+	if r.IngressHost == "" && (r.IngressClassName != "" || r.IngressTLSSecretName != "") {
+		return fmt.Errorf("ingressHost is required when ingress class or TLS secret is set")
 	}
 	return nil
 }
@@ -56,6 +63,9 @@ func (r GrafanaRequest) toUnstructured() *unstructured.Unstructured {
 			persistence["storageClass"] = r.PersistenceStorageClass
 		}
 		spec["persistence"] = persistence
+	}
+	if r.IngressHost != "" {
+		spec["ingress"] = buildIngress(r.IngressHost, r.IngressClassName, r.IngressTLSSecretName)
 	}
 
 	obj := &unstructured.Unstructured{}

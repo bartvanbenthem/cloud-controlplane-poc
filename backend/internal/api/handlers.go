@@ -181,6 +181,13 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		obj = req.toUnstructured()
+	case KindPrometheus:
+		req := &PrometheusRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
+			return
+		}
+		obj = req.toUnstructured()
 	}
 
 	created, err := s.clients.Dynamic.Resource(kind.gvr()).Namespace(obj.GetNamespace()).Create(r.Context(), obj, metav1.CreateOptions{})

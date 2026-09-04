@@ -24,21 +24,23 @@ const (
 type Kind string
 
 const (
-	KindCluster  Kind = "clusters"         // STACKIT SKE — compute.sostackit.dev
-	KindPostgres Kind = "postgresclusters" // project-easter — paas.example.com
-	KindValkey   Kind = "valkeyclusters"   // project-easter — paas.example.com
-	KindMariaDB  Kind = "mariadbclusters"  // project-easter — paas.example.com
-	KindRabbitMQ Kind = "rabbitmqclusters" // project-easter — paas.example.com
-	KindGrafana  Kind = "grafanainstances" // project-easter — paas.example.com
+	KindCluster    Kind = "clusters"            // STACKIT SKE — compute.sostackit.dev
+	KindPostgres   Kind = "postgresclusters"    // project-easter — paas.example.com
+	KindValkey     Kind = "valkeyclusters"      // project-easter — paas.example.com
+	KindMariaDB    Kind = "mariadbclusters"     // project-easter — paas.example.com
+	KindRabbitMQ   Kind = "rabbitmqclusters"    // project-easter — paas.example.com
+	KindGrafana    Kind = "grafanainstances"    // project-easter — paas.example.com
+	KindPrometheus Kind = "prometheusinstances" // project-easter — paas.example.com
 )
 
 var kindGVRs = map[Kind]schema.GroupVersionResource{
-	KindCluster:  {Group: stackitGroup, Version: stackitVersion, Resource: string(KindCluster)},
-	KindPostgres: {Group: paasGroup, Version: paasVersion, Resource: string(KindPostgres)},
-	KindValkey:   {Group: paasGroup, Version: paasVersion, Resource: string(KindValkey)},
-	KindMariaDB:  {Group: paasGroup, Version: paasVersion, Resource: string(KindMariaDB)},
-	KindRabbitMQ: {Group: paasGroup, Version: paasVersion, Resource: string(KindRabbitMQ)},
-	KindGrafana:  {Group: paasGroup, Version: paasVersion, Resource: string(KindGrafana)},
+	KindCluster:    {Group: stackitGroup, Version: stackitVersion, Resource: string(KindCluster)},
+	KindPostgres:   {Group: paasGroup, Version: paasVersion, Resource: string(KindPostgres)},
+	KindValkey:     {Group: paasGroup, Version: paasVersion, Resource: string(KindValkey)},
+	KindMariaDB:    {Group: paasGroup, Version: paasVersion, Resource: string(KindMariaDB)},
+	KindRabbitMQ:   {Group: paasGroup, Version: paasVersion, Resource: string(KindRabbitMQ)},
+	KindGrafana:    {Group: paasGroup, Version: paasVersion, Resource: string(KindGrafana)},
+	KindPrometheus: {Group: paasGroup, Version: paasVersion, Resource: string(KindPrometheus)},
 }
 
 func (k Kind) valid() bool {
