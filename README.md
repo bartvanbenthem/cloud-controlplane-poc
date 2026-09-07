@@ -55,7 +55,10 @@ case.
   building blocks, polling every 5s for status. GrafanaInstance and
   PrometheusInstance are treated as one "Monitoring" building block
   end to end, since neither is useful without the other: `MonitoringCreate`
-  installs both together (one name/namespace, one submit), `MonitoringList`
+  installs both together (one name/namespace, one submit — the backend
+  points the created GrafanaInstance's now-required `prometheusRef` at
+  that same name, since project-easter's GrafanaInstance CRD no longer
+  defaults it to a "prometheus" convention), `MonitoringList`
   merges them into one row per instance with a combined status (Ready only
   once both are), and `MonitoringDetail` shows both halves' status/conditions
   on one page behind a single Delete button that removes both — there's no
@@ -85,8 +88,10 @@ case.
 - **Credentials**: the PostgreSQL/MariaDB/RabbitMQ/Monitoring detail pages
   show a Credentials panel reading out the bootstrap-user Secret the
   underlying vendor operator auto-generates
-  (`<name>-app`/`<name>-root`/`<name>-default-user`/`<name>-admin-credentials`
-  — see `backend/internal/api/credentials.go`), with password/URI fields
+  (`<name>-app`/`<name>-mariadb-app`+`<name>-mariadb-root`/`<name>-default-user`/`<name>-admin-credentials`
+  — see `backend/internal/api/credentials.go`; MariaDB's are kind-scoped
+  so a same-named PostgresCluster and MariaDBCluster in one namespace
+  can't collide on CNPG's unscoped `<name>-app` default), with password/URI fields
   masked behind a per-field Show/Hide toggle. ValkeyCluster and
   PrometheusInstance have no auth configured, so they don't get one. This
   is why the portal's ServiceAccount has `get` on core `secrets`: RBAC
@@ -166,7 +171,10 @@ controlplane-portal 8080:80` works fine for a POC.
   including the newer `expose` (PostgresCluster/MariaDBCluster/ValkeyCluster
   — LoadBalancer/NodePort only, no annotations), `ingress`
   (RabbitMQCluster — host/class/TLS secret only, no annotations), and
-  `monitoring` (PostgresCluster/MariaDBCluster PodMonitor toggle)
+  `monitoring` (`enablePodMonitor`, now on all four of PostgresCluster/
+  MariaDBCluster/ValkeyCluster/RabbitMQCluster — a PodMonitor or
+  ServiceMonitor depending on what the underlying vendor operator
+  supports, plus an auto-provisioned Grafana dashboard for that instance)
   fields — anything beyond that (CNPG backups/pooling, Valkey ACLs,
   MariaDB Galera tuning, RabbitMQ plugins/TLS, ingress/expose
   annotations, etc.) is out of scope here the same way it's out of

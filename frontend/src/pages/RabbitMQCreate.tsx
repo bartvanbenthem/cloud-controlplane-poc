@@ -17,6 +17,7 @@ const initial: RabbitMQCreateRequest = {
   ingressHost: "",
   ingressClassName: "",
   ingressTlsSecretName: "",
+  enablePodMonitor: true,
 };
 
 export function RabbitMQCreate() {
@@ -206,6 +207,23 @@ export function RabbitMQCreate() {
                 value={form.ingressTlsSecretName}
                 onChange={(e) => set("ingressTlsSecretName", e.target.value)}
               />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Monitoring (optional)</legend>
+          <div className="form-grid">
+            <div className="field">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.enablePodMonitor}
+                  onChange={(e) => set("enablePodMonitor", e.target.checked)}
+                  style={{ marginRight: 8 }}
+                />
+                Enable Prometheus ServiceMonitor
+              </label>
             </div>
           </div>
         </fieldset>

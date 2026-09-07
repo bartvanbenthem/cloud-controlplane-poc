@@ -51,6 +51,12 @@ func (r GrafanaRequest) validate() error {
 func (r GrafanaRequest) toUnstructured() *unstructured.Unstructured {
 	spec := map[string]interface{}{
 		"replicas": r.Replicas,
+		// project-easter's GrafanaInstanceSpec.prometheusRef is required
+		// (no convention-based default) as of its GrafanaInstance CRD
+		// update -- the portal only ever creates Grafana/Prometheus
+		// instances as a pair sharing one name (see MonitoringCreate), so
+		// the referenced PrometheusInstance is always this same name.
+		"prometheusRef": r.Name,
 	}
 	if r.Version != "" {
 		spec["version"] = r.Version

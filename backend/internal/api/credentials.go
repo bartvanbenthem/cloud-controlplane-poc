@@ -135,13 +135,17 @@ func (s *Server) postgresCredentials(ctx context.Context, ns, name string) (Cred
 	return CredentialsResponse{Sets: []CredentialSet{{Label: "App user", Fields: fields}}}, nil
 }
 
-// mariadbCredentials reads mariadb-operator's auto-generated `<name>-app`
-// and `<name>-root` Secrets — MariaDBClusterSpec sets
-// passwordSecretKeyRef/rootPasswordSecretKeyRef with generate: true, so
-// mariadb-operator creates and manages both itself. Only the password
-// lives in either Secret; the app username is the CR's own
-// spec.database.owner (mariadb-operator has no separate username key), so
-// the CR is fetched too.
+// mariadbCredentials reads mariadb-operator's auto-generated
+// `<name>-mariadb-app` and `<name>-mariadb-root` Secrets —
+// MariaDBClusterSpec sets passwordSecretKeyRef/rootPasswordSecretKeyRef
+// with generate: true, so mariadb-operator creates and manages both
+// itself. These names are kind-scoped (not the unscoped `<name>-app`/
+// `<name>-root` CNPG defaults to) so a PostgresCluster and a MariaDBCluster
+// sharing a CR name in the same namespace can't collide on one Secret —
+// see project-easter's internal/mariadb appSecretSuffix/rootSecretSuffix.
+// Only the password lives in either Secret; the app username is the CR's
+// own spec.database.owner (mariadb-operator has no separate username key),
+// so the CR is fetched too.
 func (s *Server) mariadbCredentials(ctx context.Context, ns, name string) (CredentialsResponse, error) {
 	obj, err := s.clients.Dynamic.Resource(KindMariaDB.gvr()).Namespace(ns).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -152,7 +156,7 @@ func (s *Server) mariadbCredentials(ctx context.Context, ns, name string) (Crede
 	var sets []CredentialSet
 	anyFound := false
 
-	if secret, found, err := s.getSecret(ctx, ns, name+"-app"); err != nil {
+	if secret, found, err := s.getSecret(ctx, ns, name+"-mariadb-app"); err != nil {
 		return CredentialsResponse{}, err
 	} else if found {
 		anyFound = true
@@ -163,7 +167,7 @@ func (s *Server) mariadbCredentials(ctx context.Context, ns, name string) (Crede
 		sets = append(sets, CredentialSet{Label: "App user", Fields: fields})
 	}
 
-	if secret, found, err := s.getSecret(ctx, ns, name+"-root"); err != nil {
+	if secret, found, err := s.getSecret(ctx, ns, name+"-mariadb-root"); err != nil {
 		return CredentialsResponse{}, err
 	} else if found {
 		anyFound = true

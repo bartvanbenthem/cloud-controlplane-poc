@@ -30,6 +30,8 @@ type RabbitMQRequest struct {
 	IngressHost          string `json:"ingressHost,omitempty"`
 	IngressClassName     string `json:"ingressClassName,omitempty"`
 	IngressTLSSecretName string `json:"ingressTlsSecretName,omitempty"`
+
+	EnablePodMonitor bool `json:"enablePodMonitor"`
 }
 
 func (r *RabbitMQRequest) applyDefaults() {
@@ -78,6 +80,9 @@ func (r RabbitMQRequest) toUnstructured() *unstructured.Unstructured {
 	}
 	if r.IngressHost != "" {
 		spec["ingress"] = buildIngress(r.IngressHost, r.IngressClassName, r.IngressTLSSecretName)
+	}
+	spec["monitoring"] = map[string]interface{}{
+		"enablePodMonitor": r.EnablePodMonitor,
 	}
 
 	obj := &unstructured.Unstructured{}

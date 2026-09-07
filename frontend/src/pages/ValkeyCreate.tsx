@@ -16,6 +16,7 @@ const initial: ValkeyCreateRequest = {
   limitsCpu: "",
   limitsMemory: "",
   exposeType: "",
+  enablePodMonitor: true,
 };
 
 export function ValkeyCreate() {
@@ -182,7 +183,7 @@ export function ValkeyCreate() {
         </fieldset>
 
         <fieldset>
-          <legend>Networking (optional)</legend>
+          <legend>Networking &amp; monitoring (optional)</legend>
           <div className="form-grid">
             <div className="field">
               <label>Expose data-plane port</label>
@@ -194,6 +195,17 @@ export function ValkeyCreate() {
                 <option value="LoadBalancer">LoadBalancer</option>
                 <option value="NodePort">NodePort</option>
               </select>
+            </div>
+            <div className="field">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.enablePodMonitor}
+                  onChange={(e) => set("enablePodMonitor", e.target.checked)}
+                  style={{ marginRight: 8 }}
+                />
+                Enable Prometheus PodMonitor
+              </label>
             </div>
           </div>
         </fieldset>

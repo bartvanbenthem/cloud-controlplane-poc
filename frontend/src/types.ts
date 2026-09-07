@@ -115,6 +115,7 @@ export interface ValkeyCreateRequest {
   limitsCpu?: string;
   limitsMemory?: string;
   exposeType?: "" | "LoadBalancer" | "NodePort";
+  enablePodMonitor: boolean;
 }
 
 export interface GrafanaCreateRequest {
@@ -160,6 +161,7 @@ export interface RabbitMQCreateRequest {
   ingressHost?: string;
   ingressClassName?: string;
   ingressTlsSecretName?: string;
+  enablePodMonitor: boolean;
 }
 
 export interface PrometheusCreateRequest {

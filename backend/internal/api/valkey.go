@@ -28,6 +28,8 @@ type ValkeyRequest struct {
 	// ExposeType, when non-empty, creates an externally-reachable Service
 	// for the cluster's data-plane port. One of "LoadBalancer"/"NodePort".
 	ExposeType string `json:"exposeType,omitempty"`
+
+	EnablePodMonitor bool `json:"enablePodMonitor"`
 }
 
 func (r *ValkeyRequest) applyDefaults() {
@@ -80,6 +82,9 @@ func (r ValkeyRequest) toUnstructured() *unstructured.Unstructured {
 	}
 	if r.ExposeType != "" {
 		spec["expose"] = buildExpose(r.ExposeType)
+	}
+	spec["monitoring"] = map[string]interface{}{
+		"enablePodMonitor": r.EnablePodMonitor,
 	}
 
 	obj := &unstructured.Unstructured{}
