@@ -103,7 +103,11 @@ export function MonitoringCreate() {
               />
             </div>
           </div>
-          <p className="hint">Leave either empty to skip creating an Ingress for it.</p>
+          <p className="hint">
+            Leave either empty to skip creating an Ingress for it. Grafana's dashboard is always
+            reachable through the portal itself (no ingress needed) — this is only for a
+            standalone external URL.
+          </p>
         </fieldset>
 
         <div className="actions-row">

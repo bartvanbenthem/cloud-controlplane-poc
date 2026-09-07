@@ -17,12 +17,13 @@ import (
 )
 
 type Server struct {
-	clients *k8s.Clients
-	log     *slog.Logger
+	clients        *k8s.Clients
+	log            *slog.Logger
+	grafanaTunnels *grafanaTunnels
 }
 
 func NewServer(clients *k8s.Clients, log *slog.Logger) *Server {
-	return &Server{clients: clients, log: log}
+	return &Server{clients: clients, log: log, grafanaTunnels: newGrafanaTunnels()}
 }
 
 // Register mounts the API's routes onto mux. Kept separate from the
@@ -38,6 +39,8 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}", s.handleGet)
 	mux.HandleFunc("DELETE /api/resources/{kind}/{namespace}/{name}", s.handleDelete)
 	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}/credentials", s.handleGetCredentials)
+
+	mux.HandleFunc("/grafana/{namespace}/{name}/{rest...}", s.handleGrafanaProxy)
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -197,6 +200,13 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.log.Info("created resource", "kind", kind, "namespace", created.GetNamespace(), "name", created.GetName())
+	if kind == KindGrafana {
+		scheme := "http"
+		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
+			scheme = "https"
+		}
+		go s.provisionGrafanaSubPath(created.GetNamespace(), created.GetName(), scheme, r.Host)
+	}
 	writeJSON(w, http.StatusCreated, created.Object)
 }
 

@@ -18,6 +18,7 @@ import (
 type Clients struct {
 	Dynamic   dynamic.Interface
 	Clientset kubernetes.Interface
+	Config    *rest.Config
 }
 
 // New resolves a rest.Config the same way kubectl does: in-cluster config
@@ -39,7 +40,7 @@ func New() (*Clients, error) {
 		return nil, fmt.Errorf("building clientset: %w", err)
 	}
 
-	return &Clients{Dynamic: dyn, Clientset: cs}, nil
+	return &Clients{Dynamic: dyn, Clientset: cs, Config: cfg}, nil
 }
 
 func restConfig() (*rest.Config, error) {

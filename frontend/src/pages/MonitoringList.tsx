@@ -16,6 +16,13 @@ function readyCondition(r?: CustomResource) {
   return r?.status?.conditions?.find((c) => c.type === "Ready");
 }
 
+/** Every GrafanaInstance is reachable through the portal's own
+ * /grafana/{namespace}/{name}/ proxy (see backend's grafana_proxy.go) once
+ * it's Ready — no ingress host or NodePort needed. */
+function grafanaProxyUrl(instance: MonitoringInstance): string {
+  return `/grafana/${instance.namespace}/${instance.name}/`;
+}
+
 /** Both GrafanaInstance and PrometheusInstance have to be Ready for
  * monitoring to actually work, so the list shows one combined status per
  * instance rather than two independent badges — see MonitoringDetail for
@@ -134,6 +141,7 @@ export function MonitoringList() {
               <th>Namespace</th>
               <th>Summary</th>
               <th>Status</th>
+              <th>Grafana</th>
               <th>Age</th>
             </tr>
           </thead>
@@ -149,6 +157,22 @@ export function MonitoringList() {
                 <td className="muted">{summarize(instance)}</td>
                 <td>
                   <CombinedStatusBadge instance={instance} />
+                </td>
+                <td>
+                  {readyCondition(instance.grafana)?.status === "True" ? (
+                    <a
+                      className="btn-link"
+                      href={grafanaProxyUrl(instance)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open ↗
+                    </a>
+                  ) : (
+                    <span className="muted" title="Grafana isn't Ready yet">
+                      –
+                    </span>
+                  )}
                 </td>
                 <td className="muted">
                   {age((instance.grafana ?? instance.prometheus)?.metadata.creationTimestamp)}
