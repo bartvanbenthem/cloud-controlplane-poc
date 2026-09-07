@@ -52,6 +52,20 @@ func (t *grafanaTunnels) reapIdle() {
 	}
 }
 
+// invalidate drops a cached tunnel so the next get creates a fresh one. Used
+// when a tunnel that passed the reuse dial check turns out to be dead once
+// actually used (e.g. its SPDY session died but the local listener is still
+// open, so a plain dial can't detect the failure).
+func (t *grafanaTunnels) invalidate(ns, name string) {
+	key := ns + "/" + name
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if tun, ok := t.byKey[key]; ok {
+		close(tun.stopCh)
+		delete(t.byKey, key)
+	}
+}
+
 // get returns a local address that forwards to the given GrafanaInstance's
 // pod, creating (or replacing a dead) tunnel as needed. Reuse is checked
 // with a real dial rather than trusting the cached entry, since the
@@ -185,6 +199,19 @@ func (s *Server) handleGrafanaProxy(w http.ResponseWriter, r *http.Request) {
 	proxy.Director = func(req *http.Request) {
 		director(req)
 		req.Host = target.Host
+	}
+	// A tunnel can pass the reuse dial check yet still be dead (its SPDY
+	// session dropped while the local listener stayed open), which without
+	// a bounded transport hangs the request until the client gives up. Fail
+	// fast instead, and evict the tunnel so the next request gets a new one.
+	proxy.Transport = &http.Transport{
+		DialContext:           (&net.Dialer{Timeout: 5 * time.Second}).DialContext,
+		ResponseHeaderTimeout: 15 * time.Second,
+	}
+	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		s.log.Error("grafana proxy", "namespace", ns, "name", name, "error", err)
+		s.grafanaTunnels.invalidate(ns, name)
+		writeError(w, http.StatusBadGateway, fmt.Errorf("could not reach Grafana: %w", err))
 	}
 	proxy.ServeHTTP(w, r)
 }
