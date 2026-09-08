@@ -4,12 +4,15 @@ import { api } from "../api";
 
 export function MessagingHome() {
   const [rabbitmqCount, setRabbitmqCount] = useState<number | null>(null);
+  const [kafkaCount, setKafkaCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api
-      .list("rabbitmqclusters")
-      .then((r) => setRabbitmqCount(r.length))
+    Promise.all([api.list("rabbitmqclusters"), api.list("kafkaclusters")])
+      .then(([r, k]) => {
+        setRabbitmqCount(r.length);
+        setKafkaCount(k.length);
+      })
       .catch((e) => setError(String(e.message ?? e)));
   }, []);
 
@@ -37,6 +40,14 @@ export function MessagingHome() {
           <p className="muted">RabbitMQ Cluster Operator, via project-easter's RabbitMQCluster</p>
           <div className="category-stats">
             <span>{rabbitmqCount ?? "…"} brokers</span>
+          </div>
+        </Link>
+
+        <Link to="/messaging/kafka" className="category-card">
+          <h3>Kafka</h3>
+          <p className="muted">Strimzi, via project-easter's KafkaCluster</p>
+          <div className="category-stats">
+            <span>{kafkaCount ?? "…"} brokers</span>
           </div>
         </Link>
       </div>

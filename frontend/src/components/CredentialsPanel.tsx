@@ -5,11 +5,12 @@ import type { CredentialSet, Kind } from "../types";
 /** The resource kinds whose vendor operator auto-generates end-user
  * credentials this portal can read out — see
  * backend/internal/api/credentials.go for exactly which Secret each one
- * reads. ValkeyCluster and PrometheusInstance have no credentials at all,
- * so they're deliberately not listed here. */
+ * reads. ValkeyCluster, KafkaCluster, and PrometheusInstance have no
+ * credentials at all, so they're deliberately not listed here. */
 const CREDENTIAL_KINDS: ReadonlySet<Kind> = new Set([
   "postgresclusters",
   "mariadbclusters",
+  "mongodbclusters",
   "rabbitmqclusters",
   "grafanainstances",
 ]);

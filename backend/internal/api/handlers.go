@@ -187,8 +187,22 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		obj = req.toUnstructured()
+	case KindMongoDB:
+		req := &MongoDBRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
+			return
+		}
+		obj = req.toUnstructured()
 	case KindRabbitMQ:
 		req := &RabbitMQRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
+			return
+		}
+		obj = req.toUnstructured()
+	case KindKafka:
+		req := &KafkaRequest{}
 		if status, err := decodeAndValidate(r, req); err != nil {
 			writeError(w, status, err)
 			return

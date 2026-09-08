@@ -6,6 +6,7 @@ export function DatabaseHome() {
   const [postgresCount, setPostgresCount] = useState<number | null>(null);
   const [valkeyCount, setValkeyCount] = useState<number | null>(null);
   const [mariadbCount, setMariadbCount] = useState<number | null>(null);
+  const [mongodbCount, setMongodbCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -13,11 +14,13 @@ export function DatabaseHome() {
       api.list("postgresclusters"),
       api.list("valkeyclusters"),
       api.list("mariadbclusters"),
+      api.list("mongodbclusters"),
     ])
-      .then(([p, v, m]) => {
+      .then(([p, v, m, mo]) => {
         setPostgresCount(p.length);
         setValkeyCount(v.length);
         setMariadbCount(m.length);
+        setMongodbCount(mo.length);
       })
       .catch((e) => setError(String(e.message ?? e)));
   }, []);
@@ -62,6 +65,14 @@ export function DatabaseHome() {
           <p className="muted">mariadb-operator, via project-easter's MariaDBCluster</p>
           <div className="category-stats">
             <span>{mariadbCount ?? "…"} databases</span>
+          </div>
+        </Link>
+
+        <Link to="/database/mongodb" className="category-card">
+          <h3>MongoDB</h3>
+          <p className="muted">Percona Server for MongoDB, via project-easter's MongoDBCluster</p>
+          <div className="category-stats">
+            <span>{mongodbCount ?? "…"} databases</span>
           </div>
         </Link>
       </div>

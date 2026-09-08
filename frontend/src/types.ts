@@ -4,7 +4,9 @@ export type Kind =
   | "postgresclusters"
   | "valkeyclusters"
   | "mariadbclusters"
+  | "mongodbclusters"
   | "rabbitmqclusters"
+  | "kafkaclusters"
   | "grafanainstances"
   | "prometheusinstances";
 
@@ -157,6 +159,36 @@ export interface MariaDBCreateRequest {
   storageClass?: string;
   databaseName: string;
   databaseOwner: string;
+  requestsCpu?: string;
+  requestsMemory?: string;
+  limitsCpu?: string;
+  limitsMemory?: string;
+  enablePodMonitor: boolean;
+  exposeType?: "" | "LoadBalancer" | "NodePort";
+}
+
+export interface MongoDBCreateRequest {
+  name: string;
+  namespace: string;
+  replicas: number;
+  image?: string;
+  storageSize: string;
+  storageClass?: string;
+  requestsCpu?: string;
+  requestsMemory?: string;
+  limitsCpu?: string;
+  limitsMemory?: string;
+  enablePodMonitor: boolean;
+  exposeType?: "" | "LoadBalancer" | "NodePort";
+}
+
+export interface KafkaCreateRequest {
+  name: string;
+  namespace: string;
+  replicas: number;
+  version?: string;
+  storageSize: string;
+  storageClass?: string;
   requestsCpu?: string;
   requestsMemory?: string;
   limitsCpu?: string;

@@ -8,29 +8,38 @@ them.
 The sidebar is organized around collapsible categories, in addition to
 the Dashboard:
 
-- **Runtime** — where workloads actually run. Currently:
-  - **STACKIT** (working) — STACKIT Kubernetes Engine (SKE) `Cluster`s
-    (`compute.sostackit.dev/v1alpha1`), managed via
-    [stackit-compute-operator](https://github.com/bartvanbenthem/stackit-compute-operator).
-  - **OpenShift**, **VMware**, **AKS** — placeholders for this POC. No
-    operator/CRD wired up yet.
+- **Runtime** — where workloads actually run, both via
+  [stackit-compute-operator](https://github.com/bartvanbenthem/stackit-compute-operator)
+  (`compute.sostackit.dev/v1alpha1`):
+  - **Kubernetes** (working) — STACKIT Kubernetes Engine (SKE) `Cluster`s.
+  - **Virtual Machine** (working) — STACKIT Compute Engine `Server`s. The
+    portal creates a backing `Volume` for each one under the hood (see
+    "What this doesn't do (yet)" below).
 - **Database** — managed database/cache building blocks, via
   [project-easter](https://github.com/bartvanbenthem/project-easter) (a
   meta-operator fronting CloudNativePG, valkey-operator,
-  mariadb-operator, RabbitMQ Cluster Operator, grafana-operator, and the
-  Prometheus Operator with its own thin `paas.example.com/v1alpha1`
-  CRDs):
+  mariadb-operator, the Percona Server for MongoDB Operator, RabbitMQ
+  Cluster Operator, Strimzi, grafana-operator, and the Prometheus
+  Operator with its own thin `paas.example.com/v1alpha1` CRDs):
   - **PostgreSQL** — `PostgresCluster`
   - **Redis** — `ValkeyCluster` (Valkey)
   - **MariaDB** — `MariaDBCluster`
+  - **MongoDB** — `MongoDBCluster`
 - **Observability** — also via project-easter, both kinds under one
   "Monitoring" list/create page since they're the same operational
   concern:
   - **Monitoring** — `GrafanaInstance` and `PrometheusInstance`
+  - **Logging** — a placeholder for this POC. No operator/CRD wired up yet.
 - **Messaging** — also via project-easter:
   - **RabbitMQ** — `RabbitMQCluster`
-- **Network**, **Security** — placeholders for this POC. No operator/CRD
+  - **Kafka** — `KafkaCluster`
+- **Storage** — **Buckets** is a placeholder for this POC, intended to
+  front [COSI](https://github.com/kubernetes-sigs/container-object-storage-interface)
+  (`BucketClaim`) once wired up. No operator/CRD wired up yet.
+- **Security** — **Vault** is a placeholder for this POC. No operator/CRD
   wired up yet.
+- **Developer** — **GitOps Instance** and **Container Registry** are
+  placeholders for this POC. No operator/CRD wired up yet.
 
 This repo previously contained a Backstage-based version of this idea
 (scaffolder templates opening PRs into a `gitops/` dir for ArgoCD to
@@ -42,17 +51,20 @@ case.
 ## How it works
 
 - **Backend** (`backend/`, Go + [client-go](https://github.com/kubernetes/client-go)):
-  a REST API using a `dynamic.Interface` client against seven CRDs across
-  two API groups — `compute.sostackit.dev/v1alpha1` `Cluster`, and
-  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`MariaDBCluster`/`RabbitMQCluster`/`GrafanaInstance`/`PrometheusInstance`
+  a REST API using a `dynamic.Interface` client against ten CRDs across
+  two API groups — `compute.sostackit.dev/v1alpha1` `Cluster`/`Server`
+  (plus `Volume`, created internally but not portal-facing — see below),
+  and
+  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`MariaDBCluster`/`MongoDBCluster`/`RabbitMQCluster`/`KafkaCluster`/`GrafanaInstance`/`PrometheusInstance`
   — via `GET/POST /api/resources/{kind}`, `GET/DELETE .../{namespace}/{name}`,
   plus `GET /api/namespaces`. Runs in-cluster under its own ServiceAccount
   (falls back to `$KUBECONFIG` / `~/.kube/config` for local dev), and
   serves the built frontend itself (embedded via `go:embed`) — one binary,
   one container.
 - **Frontend** (`frontend/`, React + Vite + TypeScript): list/detail/create
-  pages for Clusters and the six Database/Observability/Messaging
-  building blocks, polling every 5s for status. GrafanaInstance and
+  pages for Clusters, Servers, and project-easter's
+  Database/Observability/Messaging building blocks, polling every 5s for
+  status. GrafanaInstance and
   PrometheusInstance are treated as one "Monitoring" building block
   end to end, since neither is useful without the other: `MonitoringCreate`
   installs both together (one name/namespace, one submit — the backend
@@ -62,22 +74,23 @@ case.
   merges them into one row per instance with a combined status (Ready only
   once both are), and `MonitoringDetail` shows both halves' status/conditions
   on one page behind a single Delete button that removes both — there's no
-  per-component delete, so monitoring can't be left half-torn-down. OpenShift,
-  VMware, AKS, Network, and Security are static placeholder pages — no
-  backend calls. No build step at
+  per-component delete, so monitoring can't be left half-torn-down. Logging,
+  Buckets, Vault, GitOps Instance, and Container Registry are static
+  placeholder pages — no backend calls. No build step at
   runtime — it's static files served by the Go backend.
 - **Auth**: a single shared HTTP Basic Auth credential in front of the
   whole API (`AUTH_USERNAME`/`AUTH_PASSWORD` env vars — see
   `deploy/03-secret.example.yaml`), *not* per-user Kubernetes RBAC. Every
   write goes through the one ServiceAccount's permissions
   (`deploy/02-rbac.yaml`), scoped to `get/list/watch/create/delete` on
-  those seven resource types, `get/list` on `namespaces`, and `get`
+  those ten resource types, `get/list` on `namespaces`, and `get`
   (only — no `list`/`watch`) on `secrets` (see Credentials below) —
   nothing else, and no access to the vendor CRDs (CNPG's `Cluster`,
-  valkey-operator's `ValkeyCluster`, mariadb-operator's `MariaDB`,
-  RabbitMQ Cluster Operator's `RabbitmqCluster`, grafana-operator's
-  `Grafana`, Prometheus Operator's `Prometheus`) that project-easter's
-  own ServiceAccount reconciles the paas CRs into. If
+  valkey-operator's `ValkeyCluster`, mariadb-operator's `MariaDB`, the
+  Percona Server for MongoDB Operator's `PerconaServerMongoDB`, RabbitMQ
+  Cluster Operator's `RabbitmqCluster`, Strimzi's `Kafka`,
+  grafana-operator's `Grafana`, Prometheus Operator's `Prometheus`) that
+  project-easter's own ServiceAccount reconciles the paas CRs into. If
   you need writes attributed to the real user (audit trail, per-user
   RBAC), swap this for OIDC + Kubernetes impersonation — that's a
   meaningfully bigger change, not a config flag.
@@ -85,15 +98,15 @@ case.
   the object straight to the API server. There's no review-before-apply
   step — Kubernetes' audit log and the object's `resourceVersion` history
   are the trail, not a merged PR.
-- **Credentials**: the PostgreSQL/MariaDB/RabbitMQ/Monitoring detail pages
-  show a Credentials panel reading out the bootstrap-user Secret the
-  underlying vendor operator auto-generates
-  (`<name>-app`/`<name>-mariadb-app`+`<name>-mariadb-root`/`<name>-default-user`/`<name>-admin-credentials`
+- **Credentials**: the PostgreSQL/MariaDB/MongoDB/RabbitMQ/Monitoring
+  detail pages show a Credentials panel reading out the bootstrap-user
+  Secret the underlying vendor operator auto-generates
+  (`<name>-app`/`<name>-mariadb-app`+`<name>-mariadb-root`/`<name>-psmdb-secrets`/`<name>-default-user`/`<name>-admin-credentials`
   — see `backend/internal/api/credentials.go`; MariaDB's are kind-scoped
   so a same-named PostgresCluster and MariaDBCluster in one namespace
   can't collide on CNPG's unscoped `<name>-app` default), with password/URI fields
-  masked behind a per-field Show/Hide toggle. ValkeyCluster and
-  PrometheusInstance have no auth configured, so they don't get one. This
+  masked behind a per-field Show/Hide toggle. ValkeyCluster, KafkaCluster,
+  and PrometheusInstance have no auth configured, so they don't get one. This
   is why the portal's ServiceAccount has `get` on core `secrets`: RBAC
   can't scope `get` to only secrets matching a name pattern, so in
   principle this ServiceAccount can read any Secret by name in any
@@ -172,15 +185,17 @@ controlplane-portal 8080:80` works fine for a POC.
   additional pools can be added with `kubectl` after the cluster exists.
 - The Database/Messaging forms cover the fields project-easter's own
   CRDs expose (deliberately minimal per its README's "Scope" section),
-  including the newer `expose` (PostgresCluster/MariaDBCluster/ValkeyCluster
+  including the newer `expose`
+  (PostgresCluster/MariaDBCluster/ValkeyCluster/MongoDBCluster/KafkaCluster
   — LoadBalancer/NodePort only, no annotations), `ingress`
   (RabbitMQCluster — host/class/TLS secret only, no annotations), and
-  `monitoring` (`enablePodMonitor`, now on all four of PostgresCluster/
-  MariaDBCluster/ValkeyCluster/RabbitMQCluster — a PodMonitor or
-  ServiceMonitor depending on what the underlying vendor operator
-  supports, plus an auto-provisioned Grafana dashboard for that instance)
-  fields — anything beyond that (CNPG backups/pooling, Valkey ACLs,
-  MariaDB Galera tuning, RabbitMQ plugins/TLS, ingress/expose
+  `monitoring` (`enablePodMonitor`, now on all six of PostgresCluster/
+  MariaDBCluster/ValkeyCluster/MongoDBCluster/RabbitMQCluster/KafkaCluster
+  — a PodMonitor or ServiceMonitor depending on what the underlying
+  vendor operator supports, plus an auto-provisioned Grafana dashboard
+  for that instance) fields — anything beyond that (CNPG backups/pooling,
+  Valkey ACLs, MariaDB Galera tuning, Mongo sharded topologies, RabbitMQ
+  plugins/TLS, Kafka dedicated controller/broker pools, ingress/expose
   annotations, etc.) is out of scope here the same way it's out of
   scope for project-easter itself.
 - The combined Monitoring install (`MonitoringCreate`) is deliberately

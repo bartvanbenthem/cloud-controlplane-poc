@@ -4,8 +4,10 @@ import type {
   CredentialsResponse,
   CustomResource,
   GrafanaCreateRequest,
+  KafkaCreateRequest,
   Kind,
   MariaDBCreateRequest,
+  MongoDBCreateRequest,
   PostgresCreateRequest,
   PrometheusCreateRequest,
   RabbitMQCreateRequest,
@@ -100,8 +102,20 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  createMongoDB: (body: MongoDBCreateRequest) =>
+    request<CustomResource>("/api/resources/mongodbclusters", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
   createRabbitMQ: (body: RabbitMQCreateRequest) =>
     request<CustomResource>("/api/resources/rabbitmqclusters", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  createKafka: (body: KafkaCreateRequest) =>
+    request<CustomResource>("/api/resources/kafkaclusters", {
       method: "POST",
       body: JSON.stringify(body),
     }),

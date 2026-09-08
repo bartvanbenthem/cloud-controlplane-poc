@@ -16,15 +16,17 @@ export function Dashboard() {
       api.list("postgresclusters"),
       api.list("valkeyclusters"),
       api.list("mariadbclusters"),
+      api.list("mongodbclusters"),
       api.list("grafanainstances"),
       api.list("prometheusinstances"),
       api.list("rabbitmqclusters"),
+      api.list("kafkaclusters"),
     ])
-      .then(([clusters, servers, postgres, valkey, mariadb, grafana, prometheus, rabbitmq]) => {
+      .then(([clusters, servers, postgres, valkey, mariadb, mongodb, grafana, prometheus, rabbitmq, kafka]) => {
         setRuntimeCount(clusters.length + servers.length);
-        setDatabaseCount(postgres.length + valkey.length + mariadb.length);
+        setDatabaseCount(postgres.length + valkey.length + mariadb.length + mongodb.length);
         setObservabilityCount(grafana.length + prometheus.length);
-        setMessagingCount(rabbitmq.length);
+        setMessagingCount(rabbitmq.length + kafka.length);
       })
       .catch((e) => setError(String(e.message ?? e)));
   }, []);
@@ -47,7 +49,7 @@ export function Dashboard() {
 
         <Link to="/database" className="category-card">
           <h3>Database</h3>
-          <p className="muted">PostgreSQL, Redis &amp; MariaDB</p>
+          <p className="muted">PostgreSQL, Redis, MariaDB &amp; MongoDB</p>
           <div className="category-stats">
             <span>{databaseCount ?? "…"} building blocks</span>
           </div>
@@ -63,9 +65,17 @@ export function Dashboard() {
 
         <Link to="/messaging" className="category-card">
           <h3>Messaging</h3>
-          <p className="muted">RabbitMQ</p>
+          <p className="muted">RabbitMQ &amp; Kafka</p>
           <div className="category-stats">
             <span>{messagingCount ?? "…"} brokers</span>
+          </div>
+        </Link>
+
+        <Link to="/storage" className="category-card">
+          <h3>Storage</h3>
+          <p className="muted">Buckets, via COSI</p>
+          <div className="category-stats">
+            <span className="muted">Not integrated yet</span>
           </div>
         </Link>
 

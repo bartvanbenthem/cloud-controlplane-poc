@@ -40,16 +40,18 @@ type CredentialsResponse struct {
 }
 
 // handleGetCredentials reads out the Kubernetes Secret(s) the underlying
-// vendor operator writes end-user credentials into, for the four resource
-// kinds that have any: CNPG, mariadb-operator, and the RabbitMQ Cluster
-// Operator each auto-generate a bootstrap-user password because the
-// corresponding paas spec never sets one explicitly (see
-// api/v1alpha1/*_types.go's doc comments in project-easter), and
-// grafana-operator auto-generates admin credentials unless
-// disableDefaultAdminSecret is set (which project-easter never does).
-// ValkeyCluster and PrometheusInstance have no credentials to read —
-// neither this operator nor the underlying vendor sets up any auth for
-// them — so those kinds 404 here.
+// vendor operator writes end-user credentials into, for the resource kinds
+// that have any: CNPG, mariadb-operator, and the RabbitMQ Cluster Operator
+// each auto-generate a bootstrap-user password because the corresponding
+// paas spec never sets one explicitly (see api/v1alpha1/*_types.go's doc
+// comments in project-easter), grafana-operator auto-generates admin
+// credentials unless disableDefaultAdminSecret is set (which
+// project-easter never does), and the Percona Server for MongoDB Operator
+// always writes its own multi-user secrets.users Secret regardless of what
+// MongoDBClusterSpec sets. ValkeyCluster, KafkaCluster, and
+// PrometheusInstance have no credentials to read — none of this operator,
+// the underlying vendor, or (for Kafka) any listener auth config sets up
+// authentication for them — so those kinds 404 here.
 func (s *Server) handleGetCredentials(w http.ResponseWriter, r *http.Request) {
 	kind, err := parseKind(r.PathValue("kind"))
 	if err != nil {
@@ -65,6 +67,8 @@ func (s *Server) handleGetCredentials(w http.ResponseWriter, r *http.Request) {
 		resp, err = s.postgresCredentials(ctx, ns, name)
 	case KindMariaDB:
 		resp, err = s.mariadbCredentials(ctx, ns, name)
+	case KindMongoDB:
+		resp, err = s.mongodbCredentials(ctx, ns, name)
 	case KindRabbitMQ:
 		resp, err = s.rabbitmqCredentials(ctx, ns, name)
 	case KindGrafana:
@@ -179,6 +183,34 @@ func (s *Server) mariadbCredentials(ctx context.Context, ns, name string) (Crede
 	}
 
 	return CredentialsResponse{Sets: sets, Pending: !anyFound}, nil
+}
+
+// mongodbCredentials reads the Percona Server for MongoDB Operator's
+// auto-generated `<name>-psmdb-secrets` Secret — MongoDBClusterSpec never
+// sets spec.secrets.users, so Percona generates and manages it itself, with
+// several system users inside (see internal/psmdb/psmdb.go's
+// secretsUsersSuffix in project-easter). This surfaces the userAdmin one
+// (full user/role management), since Mongo has no separate app-user concept
+// the way Postgres/MariaDB have via database.owner.
+func (s *Server) mongodbCredentials(ctx context.Context, ns, name string) (CredentialsResponse, error) {
+	secret, found, err := s.getSecret(ctx, ns, name+"-psmdb-secrets")
+	if err != nil || !found {
+		return CredentialsResponse{Pending: true}, err
+	}
+
+	var fields []CredentialField
+	for _, f := range []struct {
+		key, label string
+		sensitive  bool
+	}{
+		{"MONGODB_USER_ADMIN_USER", "Username", false},
+		{"MONGODB_USER_ADMIN_PASSWORD", "Password", true},
+	} {
+		if cf, ok := secretField(secret, f.key, f.label, f.sensitive); ok {
+			fields = append(fields, cf)
+		}
+	}
+	return CredentialsResponse{Sets: []CredentialSet{{Label: "User admin", Fields: fields}}}, nil
 }
 
 // rabbitmqCredentials reads the RabbitMQ Cluster Operator's

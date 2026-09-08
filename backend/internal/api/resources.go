@@ -29,7 +29,9 @@ const (
 	KindPostgres   Kind = "postgresclusters"    // project-easter — paas.example.com
 	KindValkey     Kind = "valkeyclusters"      // project-easter — paas.example.com
 	KindMariaDB    Kind = "mariadbclusters"     // project-easter — paas.example.com
+	KindMongoDB    Kind = "mongodbclusters"     // project-easter — paas.example.com
 	KindRabbitMQ   Kind = "rabbitmqclusters"    // project-easter — paas.example.com
+	KindKafka      Kind = "kafkaclusters"       // project-easter — paas.example.com
 	KindGrafana    Kind = "grafanainstances"    // project-easter — paas.example.com
 	KindPrometheus Kind = "prometheusinstances" // project-easter — paas.example.com
 )
@@ -40,7 +42,9 @@ var kindGVRs = map[Kind]schema.GroupVersionResource{
 	KindPostgres:   {Group: paasGroup, Version: paasVersion, Resource: string(KindPostgres)},
 	KindValkey:     {Group: paasGroup, Version: paasVersion, Resource: string(KindValkey)},
 	KindMariaDB:    {Group: paasGroup, Version: paasVersion, Resource: string(KindMariaDB)},
+	KindMongoDB:    {Group: paasGroup, Version: paasVersion, Resource: string(KindMongoDB)},
 	KindRabbitMQ:   {Group: paasGroup, Version: paasVersion, Resource: string(KindRabbitMQ)},
+	KindKafka:      {Group: paasGroup, Version: paasVersion, Resource: string(KindKafka)},
 	KindGrafana:    {Group: paasGroup, Version: paasVersion, Resource: string(KindGrafana)},
 	KindPrometheus: {Group: paasGroup, Version: paasVersion, Resource: string(KindPrometheus)},
 }

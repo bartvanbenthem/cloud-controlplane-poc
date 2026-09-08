@@ -10,10 +10,11 @@
 #
 # The "secrets"/get grant is a deliberate, narrow exception to "no core
 # workload access": it backs the credentials panel on the
-# PostgresCluster/MariaDBCluster/RabbitMQCluster/GrafanaInstance detail
-# pages (see backend/internal/api/credentials.go), which reads the vendor
-# operator's own auto-generated bootstrap-credentials Secret
-# (`<name>-app`/`<name>-root`/`<name>-default-user`/`<name>-admin-credentials`).
+# PostgresCluster/MariaDBCluster/MongoDBCluster/RabbitMQCluster/
+# GrafanaInstance detail pages (see backend/internal/api/credentials.go),
+# which reads the vendor operator's own auto-generated bootstrap-credentials
+# Secret (`<name>-app`/`<name>-root`/`<name>-psmdb-secrets`/
+# `<name>-default-user`/`<name>-admin-credentials`).
 # RBAC has no way to scope "get" to only secrets matching a name pattern,
 # so in principle this SA can `get` any Secret by name in any namespace —
 # the backend API only ever constructs those specific derived names itself
@@ -66,7 +67,9 @@ rules:
         "postgresclusters",
         "valkeyclusters",
         "mariadbclusters",
+        "mongodbclusters",
         "rabbitmqclusters",
+        "kafkaclusters",
         "grafanainstances",
         "prometheusinstances",
       ]

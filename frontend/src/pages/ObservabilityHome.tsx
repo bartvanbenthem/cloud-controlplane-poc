@@ -41,6 +41,14 @@ export function ObservabilityHome() {
             <span>{monitoringCount ?? "…"} instances</span>
           </div>
         </Link>
+
+        <Link to="/observability/logging" className="category-card">
+          <h3>Logging</h3>
+          <p className="muted">Log aggregation</p>
+          <div className="category-stats">
+            <span className="muted">Not integrated yet</span>
+          </div>
+        </Link>
       </div>
     </>
   );

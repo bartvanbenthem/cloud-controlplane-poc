@@ -5,6 +5,7 @@ import { RuntimeHome } from "./pages/RuntimeHome";
 import { DatabaseHome } from "./pages/DatabaseHome";
 import { ObservabilityHome } from "./pages/ObservabilityHome";
 import { MessagingHome } from "./pages/MessagingHome";
+import { StorageHome } from "./pages/StorageHome";
 import { SecurityHome } from "./pages/SecurityHome";
 import { DeveloperHome } from "./pages/DeveloperHome";
 import { Placeholder } from "./pages/Placeholder";
@@ -15,7 +16,9 @@ import { ServerCreate } from "./pages/ServerCreate";
 import { PostgresCreate } from "./pages/PostgresCreate";
 import { ValkeyCreate } from "./pages/ValkeyCreate";
 import { MariaDBCreate } from "./pages/MariaDBCreate";
+import { MongoDBCreate } from "./pages/MongoDBCreate";
 import { RabbitMQCreate } from "./pages/RabbitMQCreate";
+import { KafkaCreate } from "./pages/KafkaCreate";
 import { MonitoringList } from "./pages/MonitoringList";
 import { MonitoringCreate } from "./pages/MonitoringCreate";
 import { MonitoringDetail } from "./pages/MonitoringDetail";
@@ -51,9 +54,19 @@ function summarizeMariaDB(r: CustomResource): string {
     .join(" · ");
 }
 
+function summarizeMongoDB(r: CustomResource): string {
+  const spec = r.spec as { replicas?: number };
+  return `${spec.replicas ?? "?"} replica(s)`;
+}
+
 function summarizeRabbitMQ(r: CustomResource): string {
   const spec = r.spec as { replicas?: number };
   return `${spec.replicas ?? "?"} replica(s)`;
+}
+
+function summarizeKafka(r: CustomResource): string {
+  const spec = r.spec as { replicas?: number; version?: string };
+  return [`${spec.replicas ?? "?"} replica(s)`, spec.version].filter(Boolean).join(" · ");
 }
 
 export default function App() {
@@ -165,6 +178,25 @@ export default function App() {
             element={<ResourceDetail kind="mariadbclusters" listPath="/database/mariadb" />}
           />
 
+          <Route
+            path="/database/mongodb"
+            element={
+              <ResourceList
+                kind="mongodbclusters"
+                title="MongoDB Databases"
+                basePath="/database/mongodb"
+                createPath="/database/mongodb/new"
+                itemLabel="Database"
+                summarize={summarizeMongoDB}
+              />
+            }
+          />
+          <Route path="/database/mongodb/new" element={<MongoDBCreate />} />
+          <Route
+            path="/database/mongodb/:namespace/:name"
+            element={<ResourceDetail kind="mongodbclusters" listPath="/database/mongodb" />}
+          />
+
           {/* Observability */}
           <Route path="/observability" element={<ObservabilityHome />} />
 
@@ -175,6 +207,16 @@ export default function App() {
           <Route path="/observability/monitoring" element={<MonitoringList />} />
           <Route path="/observability/monitoring/new" element={<MonitoringCreate />} />
           <Route path="/observability/monitoring/:namespace/:name" element={<MonitoringDetail />} />
+          <Route
+            path="/observability/logging"
+            element={
+              <Placeholder
+                title="Logging"
+                tagline="Log aggregation."
+                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              />
+            }
+          />
 
           {/* Messaging */}
           <Route path="/messaging" element={<MessagingHome />} />
@@ -196,6 +238,38 @@ export default function App() {
           <Route
             path="/messaging/rabbitmq/:namespace/:name"
             element={<ResourceDetail kind="rabbitmqclusters" listPath="/messaging/rabbitmq" />}
+          />
+
+          <Route
+            path="/messaging/kafka"
+            element={
+              <ResourceList
+                kind="kafkaclusters"
+                title="Kafka Brokers"
+                basePath="/messaging/kafka"
+                createPath="/messaging/kafka/new"
+                itemLabel="Broker"
+                summarize={summarizeKafka}
+              />
+            }
+          />
+          <Route path="/messaging/kafka/new" element={<KafkaCreate />} />
+          <Route
+            path="/messaging/kafka/:namespace/:name"
+            element={<ResourceDetail kind="kafkaclusters" listPath="/messaging/kafka" />}
+          />
+
+          {/* Storage */}
+          <Route path="/storage" element={<StorageHome />} />
+          <Route
+            path="/storage/buckets"
+            element={
+              <Placeholder
+                title="Buckets"
+                tagline="Object storage, via COSI (Container Object Storage Interface)."
+                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              />
+            }
           />
 
           {/* Security */}

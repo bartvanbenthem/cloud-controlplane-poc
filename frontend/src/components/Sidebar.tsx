@@ -73,17 +73,32 @@ export function Sidebar() {
           <NavLink to="/database/mariadb" className={childClass}>
             MariaDB
           </NavLink>
+          <NavLink to="/database/mongodb" className={childClass}>
+            MongoDB
+          </NavLink>
         </NavGroup>
 
         <NavGroup to="/observability" label="Observability">
           <NavLink to="/observability/monitoring" className={childClass}>
             Monitoring
           </NavLink>
+          <NavLink to="/observability/logging" className={childClass}>
+            Logging
+          </NavLink>
         </NavGroup>
 
         <NavGroup to="/messaging" label="Messaging">
           <NavLink to="/messaging/rabbitmq" className={childClass}>
             RabbitMQ
+          </NavLink>
+          <NavLink to="/messaging/kafka" className={childClass}>
+            Kafka
+          </NavLink>
+        </NavGroup>
+
+        <NavGroup to="/storage" label="Storage">
+          <NavLink to="/storage/buckets" className={childClass}>
+            Buckets
           </NavLink>
         </NavGroup>
 
