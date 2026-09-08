@@ -142,6 +142,7 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var obj *unstructured.Unstructured
+	var bootVolume *unstructured.Unstructured
 	switch kind {
 	case KindCluster:
 		req := &ClusterRequest{}
@@ -149,6 +150,21 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 			writeError(w, status, err)
 			return
 		}
+		obj = req.toUnstructured()
+	case KindServer:
+		req := &ServerRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
+			return
+		}
+		// Created ahead of the Server so spec.bootVolumeRef resolves
+		// immediately — see volumeGVR's doc comment in resources.go.
+		vol, err := s.clients.Dynamic.Resource(volumeGVR).Namespace(req.Namespace).Create(r.Context(), req.toVolumeUnstructured(), metav1.CreateOptions{})
+		if err != nil {
+			s.writeK8sError(w, err)
+			return
+		}
+		bootVolume = vol
 		obj = req.toUnstructured()
 	case KindPostgres:
 		req := &PostgresRequest{}
@@ -196,6 +212,13 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	created, err := s.clients.Dynamic.Resource(kind.gvr()).Namespace(obj.GetNamespace()).Create(r.Context(), obj, metav1.CreateOptions{})
 	if err != nil {
+		if bootVolume != nil {
+			// Roll back the boot volume created above so a failed Server
+			// create doesn't leave an orphaned (billable) one behind.
+			if delErr := s.clients.Dynamic.Resource(volumeGVR).Namespace(bootVolume.GetNamespace()).Delete(r.Context(), bootVolume.GetName(), metav1.DeleteOptions{}); delErr != nil {
+				s.log.Error("failed to roll back orphaned boot volume", "error", delErr, "volume", bootVolume.GetName())
+			}
+		}
 		s.writeK8sError(w, err)
 		return
 	}
@@ -206,6 +229,23 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 			scheme = "https"
 		}
 		go s.provisionGrafanaSubPath(created.GetNamespace(), created.GetName(), scheme, r.Host)
+	}
+	if bootVolume != nil {
+		// Own the boot volume by the Server it backs, so deleting the
+		// Server through the portal also garbage-collects the volume
+		// (and, via its own finalizer, the underlying STACKIT volume)
+		// instead of leaving it orphaned.
+		bootVolume.SetOwnerReferences([]metav1.OwnerReference{{
+			APIVersion:         stackitGroup + "/" + stackitVersion,
+			Kind:               "Server",
+			Name:               created.GetName(),
+			UID:                created.GetUID(),
+			Controller:         boolPtr(true),
+			BlockOwnerDeletion: boolPtr(true),
+		}})
+		if _, err := s.clients.Dynamic.Resource(volumeGVR).Namespace(bootVolume.GetNamespace()).Update(r.Context(), bootVolume, metav1.UpdateOptions{}); err != nil {
+			s.log.Error("failed to set boot volume owner reference", "error", err, "volume", bootVolume.GetName())
+		}
 	}
 	writeJSON(w, http.StatusCreated, created.Object)
 }
@@ -236,4 +276,8 @@ func writeJSON(w http.ResponseWriter, status int, v interface{}) {
 
 func writeError(w http.ResponseWriter, status int, err error) {
 	writeJSON(w, status, map[string]string{"error": err.Error()})
+}
+
+func boolPtr(b bool) *bool {
+	return &b
 }

@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import type { ClusterCreateRequest } from "../types";
 
+// Prestaged from stackit-compute-operator's
+// config/samples/compute_v1alpha1_cluster.yaml.
 const initial: ClusterCreateRequest = {
   name: "",
   namespace: "default",
-  projectId: "",
+  projectId: "cc9fd01d-494c-4d8a-850a-cbc54939a006",
   region: "eu01",
-  kubernetesVersion: "1.31.1",
+  kubernetesVersion: "1.35.7",
   poolName: "pool-1",
   poolMachineType: "c2i.2",
   poolMachineImageName: "flatcar",

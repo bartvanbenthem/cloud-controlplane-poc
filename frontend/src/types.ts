@@ -1,5 +1,6 @@
 export type Kind =
   | "clusters"
+  | "servers"
   | "postgresclusters"
   | "valkeyclusters"
   | "mariadbclusters"
@@ -81,6 +82,23 @@ export interface ClusterCreateRequest {
   autoUpdateMachineImageVersion: boolean;
   maintenanceStart?: string;
   maintenanceEnd?: string;
+  environment: "dev" | "staging" | "prod";
+  team?: string;
+}
+
+export interface ServerCreateRequest {
+  name: string;
+  namespace: string;
+  projectId: string;
+  region: string;
+  machineType: string;
+  availabilityZone?: string;
+  imageId: string;
+  networkId: string;
+  bootVolumeSize: number;
+  keypairName?: string;
+  userData?: string;
+  powerState: "Active" | "Inactive";
   environment: "dev" | "staging" | "prod";
   team?: string;
 }

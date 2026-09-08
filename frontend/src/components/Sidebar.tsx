@@ -56,16 +56,10 @@ export function Sidebar() {
 
         <NavGroup to="/runtime" label="Runtime">
           <NavLink to="/runtime/stackit" className={childClass}>
-            SKE
+            Kubernetes
           </NavLink>
-          <NavLink to="/runtime/openshift" className={childClass}>
-            OCP
-          </NavLink>
-          <NavLink to="/runtime/vmware" className={childClass}>
-            VKS
-          </NavLink>
-          <NavLink to="/runtime/aks" className={childClass}>
-            AKS
+          <NavLink to="/runtime/vm" className={childClass}>
+            Virtual Machine
           </NavLink>
         </NavGroup>
 
@@ -93,17 +87,20 @@ export function Sidebar() {
           </NavLink>
         </NavGroup>
 
-        <div className="nav-group">
-          <NavLink to="/network" end className={groupLabelClass}>
-            Network
+        <NavGroup to="/security" label="Security">
+          <NavLink to="/security/vault" className={childClass}>
+            Vault
           </NavLink>
-        </div>
+        </NavGroup>
 
-        <div className="nav-group">
-          <NavLink to="/security" end className={groupLabelClass}>
-            Security
+        <NavGroup to="/developer" label="Developer">
+          <NavLink to="/developer/gitops" className={childClass}>
+            GitOps Instance
           </NavLink>
-        </div>
+          <NavLink to="/developer/container-registry" className={childClass}>
+            Container Registry
+          </NavLink>
+        </NavGroup>
       </nav>
     </div>
   );

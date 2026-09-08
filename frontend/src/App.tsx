@@ -5,10 +5,13 @@ import { RuntimeHome } from "./pages/RuntimeHome";
 import { DatabaseHome } from "./pages/DatabaseHome";
 import { ObservabilityHome } from "./pages/ObservabilityHome";
 import { MessagingHome } from "./pages/MessagingHome";
+import { SecurityHome } from "./pages/SecurityHome";
+import { DeveloperHome } from "./pages/DeveloperHome";
 import { Placeholder } from "./pages/Placeholder";
 import { ResourceList } from "./pages/ResourceList";
 import { ResourceDetail } from "./pages/ResourceDetail";
 import { ClusterCreate } from "./pages/ClusterCreate";
+import { ServerCreate } from "./pages/ServerCreate";
 import { PostgresCreate } from "./pages/PostgresCreate";
 import { ValkeyCreate } from "./pages/ValkeyCreate";
 import { MariaDBCreate } from "./pages/MariaDBCreate";
@@ -21,6 +24,12 @@ import type { CustomResource } from "./types";
 function summarizeCluster(r: CustomResource): string {
   const spec = r.spec as Record<string, unknown>;
   return [`k8s ${spec.kubernetesVersion}`, spec.region].filter(Boolean).join(" · ");
+}
+
+function summarizeServer(r: CustomResource): string {
+  const spec = r.spec as { machineType?: string; region?: string };
+  const status = r.status as { powerStatus?: string } | undefined;
+  return [spec.machineType, spec.region, status?.powerStatus].filter(Boolean).join(" · ");
 }
 
 function summarizePostgres(r: CustomResource): string {
@@ -63,7 +72,7 @@ export default function App() {
             element={
               <ResourceList
                 kind="clusters"
-                title="STACKIT Clusters"
+                title="Kubernetes Clusters"
                 basePath="/runtime/stackit"
                 createPath="/runtime/stackit/new"
                 itemLabel="Cluster"
@@ -78,34 +87,22 @@ export default function App() {
           />
 
           <Route
-            path="/runtime/openshift"
+            path="/runtime/vm"
             element={
-              <Placeholder
-                title="OpenShift"
-                tagline="Red Hat OpenShift."
-                body="Not integrated yet — this is a placeholder for the POC. Only STACKIT is wired up to an operator right now."
+              <ResourceList
+                kind="servers"
+                title="Virtual Machines"
+                basePath="/runtime/vm"
+                createPath="/runtime/vm/new"
+                itemLabel="Virtual Machine"
+                summarize={summarizeServer}
               />
             }
           />
+          <Route path="/runtime/vm/new" element={<ServerCreate />} />
           <Route
-            path="/runtime/vmware"
-            element={
-              <Placeholder
-                title="VMware"
-                tagline="VMware-hosted infrastructure."
-                body="Not integrated yet — this is a placeholder for the POC. Only STACKIT is wired up to an operator right now."
-              />
-            }
-          />
-          <Route
-            path="/runtime/aks"
-            element={
-              <Placeholder
-                title="AKS"
-                tagline="Azure Kubernetes Service."
-                body="Not integrated yet — this is a placeholder for the POC. Only STACKIT is wired up to an operator right now."
-              />
-            }
+            path="/runtime/vm/:namespace/:name"
+            element={<ResourceDetail kind="servers" listPath="/runtime/vm" />}
           />
 
           {/* Database */}
@@ -201,23 +198,37 @@ export default function App() {
             element={<ResourceDetail kind="rabbitmqclusters" listPath="/messaging/rabbitmq" />}
           />
 
-          {/* Placeholder categories */}
+          {/* Security */}
+          <Route path="/security" element={<SecurityHome />} />
           <Route
-            path="/network"
+            path="/security/vault"
             element={
               <Placeholder
-                title="Network"
-                tagline="Networking building blocks."
+                title="Vault"
+                tagline="Secrets management."
+                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              />
+            }
+          />
+
+          {/* Developer */}
+          <Route path="/developer" element={<DeveloperHome />} />
+          <Route
+            path="/developer/gitops"
+            element={
+              <Placeholder
+                title="GitOps Instance"
+                tagline="Continuous delivery."
                 body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
               />
             }
           />
           <Route
-            path="/security"
+            path="/developer/container-registry"
             element={
               <Placeholder
-                title="Security"
-                tagline="Security and secrets building blocks."
+                title="Container Registry"
+                tagline="Container image storage."
                 body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
               />
             }

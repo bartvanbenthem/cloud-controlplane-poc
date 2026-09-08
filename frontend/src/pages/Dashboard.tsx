@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 
 export function Dashboard() {
-  const [clusterCount, setClusterCount] = useState<number | null>(null);
+  const [runtimeCount, setRuntimeCount] = useState<number | null>(null);
   const [databaseCount, setDatabaseCount] = useState<number | null>(null);
   const [observabilityCount, setObservabilityCount] = useState<number | null>(null);
   const [messagingCount, setMessagingCount] = useState<number | null>(null);
@@ -12,6 +12,7 @@ export function Dashboard() {
   useEffect(() => {
     Promise.all([
       api.list("clusters"),
+      api.list("servers"),
       api.list("postgresclusters"),
       api.list("valkeyclusters"),
       api.list("mariadbclusters"),
@@ -19,8 +20,8 @@ export function Dashboard() {
       api.list("prometheusinstances"),
       api.list("rabbitmqclusters"),
     ])
-      .then(([clusters, postgres, valkey, mariadb, grafana, prometheus, rabbitmq]) => {
-        setClusterCount(clusters.length);
+      .then(([clusters, servers, postgres, valkey, mariadb, grafana, prometheus, rabbitmq]) => {
+        setRuntimeCount(clusters.length + servers.length);
         setDatabaseCount(postgres.length + valkey.length + mariadb.length);
         setObservabilityCount(grafana.length + prometheus.length);
         setMessagingCount(rabbitmq.length);
@@ -38,9 +39,9 @@ export function Dashboard() {
       <div className="category-grid">
         <Link to="/runtime" className="category-card">
           <h3>Runtime</h3>
-          <p className="muted">STACKIT, OpenShift, VMware &amp; AKS</p>
+          <p className="muted">Kubernetes &amp; Virtual Machine</p>
           <div className="category-stats">
-            <span>{clusterCount ?? "…"} clusters</span>
+            <span>{runtimeCount ?? "…"} resources</span>
           </div>
         </Link>
 
@@ -68,17 +69,17 @@ export function Dashboard() {
           </div>
         </Link>
 
-        <Link to="/network" className="category-card">
-          <h3>Network</h3>
-          <p className="muted">Networking building blocks</p>
+        <Link to="/security" className="category-card">
+          <h3>Security</h3>
+          <p className="muted">Vault &amp; secrets building blocks</p>
           <div className="category-stats">
             <span className="muted">Not integrated yet</span>
           </div>
         </Link>
 
-        <Link to="/security" className="category-card">
-          <h3>Security</h3>
-          <p className="muted">Security &amp; secrets building blocks</p>
+        <Link to="/developer" className="category-card">
+          <h3>Developer</h3>
+          <p className="muted">GitOps Instance &amp; Container Registry</p>
           <div className="category-stats">
             <span className="muted">Not integrated yet</span>
           </div>

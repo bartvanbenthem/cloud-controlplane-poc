@@ -159,11 +159,15 @@ controlplane-portal 8080:80` works fine for a POC.
 - No live watch/streaming — the UI polls every 5s rather than using a
   Kubernetes watch, which is simpler but means up to a 5s lag on status
   changes.
-- Of stackit-compute-operator's CRDs, only `Cluster` is exposed —
-  `Server`/`Volume`/`Network` aren't wired up here.
-- OpenShift, VMware, AKS, Network, and Security are
-  navigation/page scaffolding only — no operator, CRD, or API behind them
-  yet.
+- Of stackit-compute-operator's CRDs, `Cluster` and `Server` are exposed —
+  `Network` isn't wired up here (a VM's network must already exist; only a
+  raw `networkId` is accepted, not a `Network` resource created through
+  the portal). `Volume` also isn't user-facing, but the portal creates one
+  internally as each Server's boot disk (owned by that Server, so deleting
+  it cleans up the volume too) — see server.go's/resources.go's comments
+  for why a Server can't just set `imageId`/`bootVolume` directly.
+- Vault and ArgoCD are navigation/page scaffolding only — no operator,
+  CRD, or API behind them yet.
 - The `Cluster` form only configures one node pool at creation time;
   additional pools can be added with `kubectl` after the cluster exists.
 - The Database/Messaging forms cover the fields project-easter's own

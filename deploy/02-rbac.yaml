@@ -50,8 +50,16 @@ metadata:
   name: controlplane-portal
 rules:
   - apiGroups: ["compute.sostackit.dev"]
-    resources: ["clusters"]
+    resources: ["clusters", "servers"]
     verbs: ["get", "list", "watch", "create", "delete"]
+  # Volume: created internally as a Server's boot disk (see volumeGVR's doc
+  # comment in backend/internal/api/resources.go) — never listed/watched
+  # since it isn't a portal-facing kind. "update" sets the owner reference
+  # to its Server after creation; "delete" only rolls one back if that
+  # Server's own create fails.
+  - apiGroups: ["compute.sostackit.dev"]
+    resources: ["volumes"]
+    verbs: ["get", "create", "update", "delete"]
   - apiGroups: ["paas.example.com"]
     resources:
       [

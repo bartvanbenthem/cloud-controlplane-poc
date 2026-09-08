@@ -9,6 +9,7 @@ import type {
   PostgresCreateRequest,
   PrometheusCreateRequest,
   RabbitMQCreateRequest,
+  ServerCreateRequest,
   ValkeyCreateRequest,
 } from "./types";
 
@@ -65,6 +66,12 @@ export const api = {
 
   createCluster: (body: ClusterCreateRequest) =>
     request<CustomResource>("/api/resources/clusters", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  createServer: (body: ServerCreateRequest) =>
+    request<CustomResource>("/api/resources/servers", {
       method: "POST",
       body: JSON.stringify(body),
     }),

@@ -25,6 +25,7 @@ type Kind string
 
 const (
 	KindCluster    Kind = "clusters"            // STACKIT SKE — compute.sostackit.dev
+	KindServer     Kind = "servers"             // STACKIT Compute Engine (VM) — compute.sostackit.dev
 	KindPostgres   Kind = "postgresclusters"    // project-easter — paas.example.com
 	KindValkey     Kind = "valkeyclusters"      // project-easter — paas.example.com
 	KindMariaDB    Kind = "mariadbclusters"     // project-easter — paas.example.com
@@ -35,6 +36,7 @@ const (
 
 var kindGVRs = map[Kind]schema.GroupVersionResource{
 	KindCluster:    {Group: stackitGroup, Version: stackitVersion, Resource: string(KindCluster)},
+	KindServer:     {Group: stackitGroup, Version: stackitVersion, Resource: string(KindServer)},
 	KindPostgres:   {Group: paasGroup, Version: paasVersion, Resource: string(KindPostgres)},
 	KindValkey:     {Group: paasGroup, Version: paasVersion, Resource: string(KindValkey)},
 	KindMariaDB:    {Group: paasGroup, Version: paasVersion, Resource: string(KindMariaDB)},
@@ -42,6 +44,18 @@ var kindGVRs = map[Kind]schema.GroupVersionResource{
 	KindGrafana:    {Group: paasGroup, Version: paasVersion, Resource: string(KindGrafana)},
 	KindPrometheus: {Group: paasGroup, Version: paasVersion, Resource: string(KindPrometheus)},
 }
+
+// volumeGVR is the GVR for Volume resources the portal creates internally
+// as a Server's boot volume — not a portal-facing Kind (no
+// /api/resources/volumes route). STACKIT rejects a Server create that sets
+// both spec.imageId and spec.bootVolume (the two ways of specifying a boot
+// disk are mutually exclusive), so instead of setting either directly the
+// portal creates a dedicated Volume from the requested image/size and has
+// the Server reference it via spec.bootVolumeRef — mirroring
+// stackit-compute-operator's own recommended Network+Volume+Server
+// pattern (config/samples/full_stack-test.yaml) while keeping that
+// resource out of the portal's UI.
+var volumeGVR = schema.GroupVersionResource{Group: stackitGroup, Version: stackitVersion, Resource: "volumes"}
 
 func (k Kind) valid() bool {
 	_, ok := kindGVRs[k]
