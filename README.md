@@ -74,7 +74,28 @@ case.
   merges them into one row per instance with a combined status (Ready only
   once both are), and `MonitoringDetail` shows both halves' status/conditions
   on one page behind a single Delete button that removes both — there's no
-  per-component delete, so monitoring can't be left half-torn-down. Logging,
+  per-component delete, so monitoring can't be left half-torn-down.
+  Rather than embedding the whole Grafana app, `ResourceDetail` embeds
+  each of the six database/messaging kinds' own auto-provisioned
+  dashboard inline (below Conditions, above Spec) when that instance has
+  `monitoring.enablePodMonitor` set — see
+  `frontend/src/components/GrafanaDashboardEmbed.tsx` for the per-kind
+  dashboard UID map (project-easter bakes a fixed UID per *kind* into its
+  own binary — not one per instance — so all instances of the same kind
+  share a UID; only the underlying `GrafanaDashboard` Kubernetes object
+  name is per-instance) and how it resolves which `GrafanaInstance` in the
+  resource's own namespace to embed from (project-easter's
+  GrafanaDashboard→Grafana matching is a namespace-scoped label selector,
+  so this picks the first Ready instance found there — ambiguous if a
+  namespace has more than one). Reuses the same `/grafana/{namespace}/{name}/`
+  proxy and `security.allow_embedding`/anonymous-Viewer setup
+  `backend/internal/api/grafana_provision.go`'s `setGrafanaSubPath`
+  already does for the "Open Grafana ↗" link on `MonitoringDetail` (with
+  a security tradeoff spelled out in that function's doc comment:
+  anonymous Viewer access becomes available to anything that can reach
+  the instance's Service directly, not just requests routed through the
+  portal) — this only applies to GrafanaInstances created after that was
+  added; older ones aren't retroactively reconfigured. Logging,
   Buckets, Vault, GitOps Instance, and Container Registry are static
   placeholder pages — no backend calls. No build step at
   runtime — it's static files served by the Go backend.

@@ -4,6 +4,7 @@ import { api } from "../api";
 import type { CustomResource, Kind } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
 import { CredentialsPanel, hasCredentials } from "../components/CredentialsPanel";
+import { GrafanaDashboardEmbed } from "../components/GrafanaDashboardEmbed";
 
 export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: string }) {
   const { namespace = "", name = "" } = useParams();
@@ -101,6 +102,8 @@ export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: strin
           </table>
         </div>
       )}
+
+      <GrafanaDashboardEmbed kind={kind} namespace={resource.metadata.namespace} name={resource.metadata.name} resource={resource} />
 
       <div className="panel">
         <h3>Spec</h3>

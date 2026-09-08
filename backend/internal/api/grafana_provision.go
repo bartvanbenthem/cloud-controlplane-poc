@@ -16,9 +16,11 @@ import (
 // The portal otherwise never touches vendor CRDs directly (see
 // deploy/02-rbac.yaml's comment); this is a narrow, deliberate exception
 // so a freshly-created instance can be served correctly through
-// handleGrafanaProxy's /grafana/{namespace}/{name}/ path — Grafana
-// doesn't know it's behind a path-prefixing proxy otherwise, and 404s its
-// own assets.
+// handleGrafanaProxy's /grafana/{namespace}/{name}/ path (Grafana doesn't
+// know it's behind a path-prefixing proxy otherwise, and 404s its own
+// assets) and can be embedded inline in the portal's Monitoring detail
+// page rather than only linked out to in a new tab (Grafana refuses to be
+// framed and has no session to present otherwise — see setGrafanaSubPath).
 var vendorGrafanaGVR = schema.GroupVersionResource{
 	Group:    "grafana.integreatly.org",
 	Version:  "v1beta1",
@@ -76,12 +78,39 @@ type grafanaResourceClient interface {
 	Update(ctx context.Context, obj *unstructured.Unstructured, opts metav1.UpdateOptions, subresources ...string) (*unstructured.Unstructured, error)
 }
 
+// setGrafanaSubPath configures the vendor Grafana object's grafana.ini
+// (spec.config.<section>.<key> — see the CRD's own free-form schema) so it
+// serves correctly behind the portal's path-prefixing proxy, and so the
+// portal can embed it inline (an <iframe> on MonitoringDetail) instead of
+// only linking out to it. Both pieces are needed for that:
+//   - [security] allow_embedding: Grafana sends X-Frame-Options: deny by
+//     default, which blocks framing outright regardless of auth.
+//   - [auth.anonymous]: Grafana otherwise has no session to render behind
+//     the iframe — the portal's own Basic Auth gate only covers requests
+//     that go through its /grafana/{namespace}/{name}/ proxy, it isn't a
+//     Grafana-native session grafana.ini can extend into the frame.
+//
+// Enabling anonymous auth is a property of this Grafana instance itself,
+// not of requests routed through the portal's proxy — so anything in the
+// cluster that can reach the instance's Service directly (bypassing the
+// portal entirely) also gets unauthenticated Viewer access, not just
+// browsers going through the portal's Basic Auth gate. Accepted here
+// since Viewer is read-only and these instances have no other network
+// exposure unless the optional ingress host is set (see
+// MonitoringCreate) — worth reconsidering before reusing this pattern
+// somewhere with a wider network reach.
 func setGrafanaSubPath(ctx context.Context, client grafanaResourceClient, obj *unstructured.Unstructured, rootURL string) error {
-	if err := unstructured.SetNestedField(obj.Object, rootURL, "spec", "config", "server", "root_url"); err != nil {
-		return err
+	fields := []struct{ value, section, key string }{
+		{rootURL, "server", "root_url"},
+		{"true", "server", "serve_from_sub_path"},
+		{"true", "security", "allow_embedding"},
+		{"true", "auth.anonymous", "enabled"},
+		{"Viewer", "auth.anonymous", "org_role"},
 	}
-	if err := unstructured.SetNestedField(obj.Object, "true", "spec", "config", "server", "serve_from_sub_path"); err != nil {
-		return err
+	for _, f := range fields {
+		if err := unstructured.SetNestedField(obj.Object, f.value, "spec", "config", f.section, f.key); err != nil {
+			return err
+		}
 	}
 	_, err := client.Update(ctx, obj, metav1.UpdateOptions{})
 	return err
