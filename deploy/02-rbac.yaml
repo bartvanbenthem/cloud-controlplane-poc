@@ -34,6 +34,13 @@
 # arbitrary pod by name — but RBAC itself doesn't scope portforward to
 # Grafana pods specifically, so this SA can port-forward to any pod.
 #
+# The "persistentvolumeclaims" grant backs the Storage/Volumes page
+# (backend/internal/api/volumes.go): listing PVCs (cross-referenced
+# against Pods to show Attached/Detached), and deleting one once it's
+# confirmed neither Bound nor attached. "patch" is only ever used to
+# strip finalizers on a force-delete of an already-unbound, already-
+# detached PVC stuck Terminating.
+#
 # The "grafana.integreatly.org"/"grafanas" get+update grant is the one
 # place this portal reaches past its own paas.example.com CRDs into a
 # vendor one (see backend/internal/api/grafana_provision.go): Grafana has
@@ -86,6 +93,9 @@ rules:
   - apiGroups: [""]
     resources: ["pods/portforward"]
     verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "delete", "patch"]
   - apiGroups: ["grafana.integreatly.org"]
     resources: ["grafanas"]
     verbs: ["get", "update"]
