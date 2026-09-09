@@ -34,6 +34,9 @@ func (s *Server) Register(mux *http.ServeMux) {
 
 	mux.HandleFunc("GET /api/namespaces", s.handleListNamespaces)
 
+	mux.HandleFunc("GET /api/volumes", s.handleListVolumes)
+	mux.HandleFunc("DELETE /api/volumes/{namespace}/{name}", s.handleDeleteVolume)
+
 	mux.HandleFunc("GET /api/resources/{kind}", s.handleList)
 	mux.HandleFunc("POST /api/resources/{kind}", s.handleCreate)
 	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}", s.handleGet)

@@ -13,6 +13,7 @@ import type {
   RabbitMQCreateRequest,
   ServerCreateRequest,
   ValkeyCreateRequest,
+  Volume,
 } from "./types";
 
 class RequestError extends Error {
@@ -58,6 +59,15 @@ export const api = {
   remove: (kind: Kind, namespace: string, name: string) =>
     request<void>(
       `/api/resources/${kind}/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`,
+      { method: "DELETE" },
+    ),
+
+  listVolumes: (namespace?: string) =>
+    request<Volume[]>(`/api/volumes${namespace ? `?namespace=${encodeURIComponent(namespace)}` : ""}`),
+
+  deleteVolume: (namespace: string, name: string, force = false) =>
+    request<void>(
+      `/api/volumes/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}${force ? "?force=true" : ""}`,
       { method: "DELETE" },
     ),
 

@@ -97,6 +97,9 @@ export function Sidebar() {
         </NavGroup>
 
         <NavGroup to="/storage" label="Storage">
+          <NavLink to="/storage/volumes" className={childClass}>
+            Volumes
+          </NavLink>
           <NavLink to="/storage/buckets" className={childClass}>
             Buckets
           </NavLink>

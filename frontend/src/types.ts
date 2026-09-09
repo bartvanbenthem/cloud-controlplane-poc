@@ -46,6 +46,27 @@ export interface ApiError {
   error: string;
 }
 
+/** A PersistentVolumeClaim as the Storage/Volumes page shows it. PVCs are
+ * a core Kubernetes resource, not one of the operator-fronted Kinds above,
+ * so they get their own type and their own /api/volumes endpoints rather
+ * than going through /api/resources/{kind}. */
+export interface Volume {
+  metadata: ObjectMeta;
+  spec: {
+    accessModes?: string[];
+    resources?: { requests?: { storage?: string } };
+    storageClassName?: string;
+    volumeName?: string;
+  };
+  status: {
+    phase?: string;
+    capacity?: { storage?: string };
+  };
+  /** Whether any Pod currently mounts this PVC. A detached (false) PVC is
+   * safe to force-delete if it's stuck Terminating. */
+  attached: boolean;
+}
+
 export interface CredentialField {
   label: string;
   value: string;

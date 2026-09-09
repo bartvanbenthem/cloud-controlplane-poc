@@ -6,6 +6,7 @@ import { DatabaseHome } from "./pages/DatabaseHome";
 import { ObservabilityHome } from "./pages/ObservabilityHome";
 import { MessagingHome } from "./pages/MessagingHome";
 import { StorageHome } from "./pages/StorageHome";
+import { VolumesList } from "./pages/VolumesList";
 import { SecurityHome } from "./pages/SecurityHome";
 import { DeveloperHome } from "./pages/DeveloperHome";
 import { Placeholder } from "./pages/Placeholder";
@@ -261,6 +262,7 @@ export default function App() {
 
           {/* Storage */}
           <Route path="/storage" element={<StorageHome />} />
+          <Route path="/storage/volumes" element={<VolumesList />} />
           <Route
             path="/storage/buckets"
             element={
