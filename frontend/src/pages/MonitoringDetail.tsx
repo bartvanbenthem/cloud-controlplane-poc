@@ -4,6 +4,7 @@ import { api, RequestError } from "../api";
 import type { CustomResource } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
 import { CredentialsPanel } from "../components/CredentialsPanel";
+import { LokiDatasourcePanel } from "../components/LokiDatasourcePanel";
 
 /** Grafana and Prometheus are installed together by MonitoringCreate and
  * neither is useful without the other (Grafana has nothing to query,
@@ -152,7 +153,10 @@ export function MonitoringDetail() {
 
       <ResourceHalf title="Grafana" kindLabel="GrafanaInstance" resource={grafana} />
       {grafana && (
-        <CredentialsPanel kind="grafanainstances" namespace={grafana.metadata.namespace} name={grafana.metadata.name} />
+        <>
+          <CredentialsPanel kind="grafanainstances" namespace={grafana.metadata.namespace} name={grafana.metadata.name} />
+          <LokiDatasourcePanel namespace={grafana.metadata.namespace} grafana={grafana} onUpdated={setGrafana} />
+        </>
       )}
 
       <ResourceHalf title="Prometheus" kindLabel="PrometheusInstance" resource={prometheus} />

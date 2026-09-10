@@ -1,7 +1,7 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
-import type { GrafanaCreateRequest, PrometheusCreateRequest } from "../types";
+import type { CustomResource, GrafanaCreateRequest, PrometheusCreateRequest } from "../types";
 
 /** One minimal form that installs the Monitoring stack — a GrafanaInstance
  * and a PrometheusInstance, project-easter's thin fronts for grafana-operator
@@ -14,8 +14,30 @@ export function MonitoringCreate() {
   const [namespace, setNamespace] = useState("default");
   const [grafanaIngressHost, setGrafanaIngressHost] = useState("");
   const [prometheusIngressHost, setPrometheusIngressHost] = useState("");
+  const [lokiRef, setLokiRef] = useState("");
+  const [lokiInstances, setLokiInstances] = useState<CustomResource[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Loki instances to offer as a datasource are namespace-scoped, so
+  // re-fetch whenever the target namespace changes, and drop any previously
+  // picked lokiRef that no longer exists in the new namespace.
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .list("lokiinstances", namespace)
+      .then((items) => !cancelled && setLokiInstances(items))
+      .catch(() => !cancelled && setLokiInstances([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [namespace]);
+
+  useEffect(() => {
+    if (lokiRef && !lokiInstances.some((l) => l.metadata.name === lokiRef)) {
+      setLokiRef("");
+    }
+  }, [lokiInstances, lokiRef]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -26,6 +48,7 @@ export function MonitoringCreate() {
       name,
       namespace,
       replicas: 1,
+      lokiRef: lokiRef || undefined,
       ingressHost: grafanaIngressHost,
     };
     const prometheus: PrometheusCreateRequest = {
@@ -77,6 +100,28 @@ export function MonitoringCreate() {
             <div className="field">
               <label>Namespace</label>
               <input type="text" value={namespace} onChange={(e) => setNamespace(e.target.value)} />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Logging (optional)</legend>
+          <div className="form-grid">
+            <div className="field">
+              <label>Loki datasource</label>
+              <select value={lokiRef} onChange={(e) => setLokiRef(e.target.value)}>
+                <option value="">None</option>
+                {lokiInstances.map((l) => (
+                  <option key={l.metadata.name} value={l.metadata.name}>
+                    {l.metadata.name}
+                  </option>
+                ))}
+              </select>
+              <p className="hint">
+                {lokiInstances.length === 0
+                  ? `No LokiInstance found in namespace "${namespace}" — create one first if you want Grafana wired up with a Loki datasource.`
+                  : "Wires this Grafana up with a Loki datasource for the selected LokiInstance, in this same namespace."}
+              </p>
             </div>
           </div>
         </fieldset>

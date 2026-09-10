@@ -6,12 +6,14 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/bartvanbenthem/cloud-controlplane-poc/backend/internal/k8s"
 )
@@ -40,6 +42,7 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/resources/{kind}", s.handleList)
 	mux.HandleFunc("POST /api/resources/{kind}", s.handleCreate)
 	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}", s.handleGet)
+	mux.HandleFunc("PATCH /api/resources/{kind}/{namespace}/{name}", s.handlePatch)
 	mux.HandleFunc("DELETE /api/resources/{kind}/{namespace}/{name}", s.handleDelete)
 	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}/credentials", s.handleGetCredentials)
 
@@ -97,6 +100,47 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, obj.Object)
+}
+
+// handlePatch edits one already-created resource in place, via a JSON
+// Merge Patch against its spec. Unlike handleCreate this isn't wired up
+// for every Kind -- only GrafanaInstance's lokiRef is editable through the
+// portal today (see MonitoringDetail's Loki-datasource panel), so every
+// other kind is rejected outright rather than silently accepting a patch
+// it doesn't know how to build.
+func (s *Server) handlePatch(w http.ResponseWriter, r *http.Request) {
+	kind, err := parseKind(r.PathValue("kind"))
+	if err != nil {
+		writeError(w, http.StatusNotFound, err)
+		return
+	}
+	ns, name := r.PathValue("namespace"), r.PathValue("name")
+
+	var patch []byte
+	switch kind {
+	case KindGrafana:
+		req := &GrafanaLokiRefPatch{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
+			return
+		}
+		patch, err = req.mergePatch()
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err)
+			return
+		}
+	default:
+		writeError(w, http.StatusMethodNotAllowed, fmt.Errorf("%s cannot be edited", kind))
+		return
+	}
+
+	updated, err := s.clients.Dynamic.Resource(kind.gvr()).Namespace(ns).Patch(r.Context(), name, types.MergePatchType, patch, metav1.PatchOptions{})
+	if err != nil {
+		s.writeK8sError(w, err)
+		return
+	}
+	s.log.Info("patched resource", "kind", kind, "namespace", ns, "name", name)
+	writeJSON(w, http.StatusOK, updated.Object)
 }
 
 func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {

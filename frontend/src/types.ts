@@ -167,6 +167,7 @@ export interface GrafanaCreateRequest {
   replicas: number;
   persistenceSize?: string;
   persistenceStorageClass?: string;
+  lokiRef?: string;
   ingressHost?: string;
   ingressClassName?: string;
   ingressTlsSecretName?: string;

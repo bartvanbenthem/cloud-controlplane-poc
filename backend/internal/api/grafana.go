@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -20,6 +21,13 @@ type GrafanaRequest struct {
 
 	PersistenceSize         string `json:"persistenceSize,omitempty"`
 	PersistenceStorageClass string `json:"persistenceStorageClass,omitempty"`
+
+	// LokiRef names the LokiInstance (in this same namespace) this Grafana
+	// should get a Loki datasource for. Optional and, unlike PrometheusRef,
+	// not implied by naming convention -- a Grafana/Prometheus pair always
+	// shares one name (see MonitoringCreate), but a Loki instance doesn't
+	// necessarily exist or share that name, so the caller passes it explicitly.
+	LokiRef string `json:"lokiRef,omitempty"`
 
 	IngressHost          string `json:"ingressHost,omitempty"`
 	IngressClassName     string `json:"ingressClassName,omitempty"`
@@ -58,6 +66,9 @@ func (r GrafanaRequest) toUnstructured() *unstructured.Unstructured {
 		// the referenced PrometheusInstance is always this same name.
 		"prometheusRef": r.Name,
 	}
+	if r.LokiRef != "" {
+		spec["lokiRef"] = r.LokiRef
+	}
 	if r.Version != "" {
 		spec["version"] = r.Version
 	}
@@ -85,4 +96,27 @@ func (r GrafanaRequest) toUnstructured() *unstructured.Unstructured {
 		"spec": spec,
 	})
 	return obj
+}
+
+// GrafanaLokiRefPatch is the payload for PATCH
+// /api/resources/grafanainstances/{namespace}/{name} -- the only field an
+// existing GrafanaInstance can be edited through, so it's a flat string
+// rather than a partial GrafanaRequest. An empty string clears the
+// reference (spec.lokiRef is optional, see GrafanaRequest.LokiRef).
+type GrafanaLokiRefPatch struct {
+	LokiRef string `json:"lokiRef"`
+}
+
+// mergePatch builds a JSON Merge Patch (RFC 7386) body for spec.lokiRef --
+// a bare `null` removes the field entirely rather than setting it to "",
+// since project-easter's LokiRef is `omitempty` and an operator-side zero
+// value isn't guaranteed to behave the same as the field being absent.
+func (p GrafanaLokiRefPatch) mergePatch() ([]byte, error) {
+	var lokiRef interface{}
+	if p.LokiRef != "" {
+		lokiRef = p.LokiRef
+	}
+	return json.Marshal(map[string]interface{}{
+		"spec": map[string]interface{}{"lokiRef": lokiRef},
+	})
 }

@@ -142,6 +142,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  /** Sets or clears (pass "") an existing GrafanaInstance's Loki datasource
+   * — the only field editable after creation. See MonitoringCreate for the
+   * same field at creation time. */
+  patchGrafanaLokiRef: (namespace: string, name: string, lokiRef: string) =>
+    request<CustomResource>(
+      `/api/resources/grafanainstances/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`,
+      { method: "PATCH", body: JSON.stringify({ lokiRef }) },
+    ),
 };
 
 export { RequestError };

@@ -77,11 +77,19 @@ rules:
         "mongodbclusters",
         "rabbitmqclusters",
         "kafkaclusters",
-        "grafanainstances",
         "prometheusinstances",
         "lokiinstances",
       ]
     verbs: ["get", "list", "watch", "create", "delete"]
+  # grafanainstances gets its own rule, split out from the block above,
+  # for the extra "patch" verb: MonitoringDetail's Loki-datasource editor
+  # (backend/internal/api/handlers.go's handlePatch) lets you set/clear an
+  # existing GrafanaInstance's spec.lokiRef via a JSON merge patch instead
+  # of live-patching the cluster by hand. No other paas.example.com kind is
+  # editable through the portal yet, so none of the others need it.
+  - apiGroups: ["paas.example.com"]
+    resources: ["grafanainstances"]
+    verbs: ["get", "list", "watch", "create", "delete", "patch"]
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["get", "list"]
