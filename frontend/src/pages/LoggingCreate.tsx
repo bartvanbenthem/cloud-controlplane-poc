@@ -7,8 +7,8 @@ const initial: LokiCreateRequest = {
   name: "",
   namespace: "default",
   size: "1x.demo",
-  storageClassName: "",
-  objectStorageSecretName: "",
+  storageClassName: "premium-perf1-stackit",
+  objectStorageSecretName: "cloudian-s3",
 };
 
 export function LoggingCreate() {
@@ -103,7 +103,7 @@ export function LoggingCreate() {
               <input
                 type="text"
                 required
-                placeholder="e.g. standard"
+                placeholder="e.g. premium-perf1-stackit"
                 value={form.storageClassName}
                 onChange={(e) => set("storageClassName", e.target.value)}
               />
@@ -117,7 +117,7 @@ export function LoggingCreate() {
               <input
                 type="text"
                 required
-                placeholder="e.g. example-loki-s3"
+                placeholder="e.g. cloudian-s3"
                 value={form.objectStorageSecretName}
                 onChange={(e) => set("objectStorageSecretName", e.target.value)}
               />
