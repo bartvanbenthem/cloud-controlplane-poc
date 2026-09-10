@@ -14,6 +14,10 @@ export function MonitoringCreate() {
   const [namespace, setNamespace] = useState("default");
   const [grafanaIngressHost, setGrafanaIngressHost] = useState("");
   const [prometheusIngressHost, setPrometheusIngressHost] = useState("");
+  const [grafanaExposeType, setGrafanaExposeType] = useState<"" | "LoadBalancer" | "NodePort">("");
+  const [prometheusExposeType, setPrometheusExposeType] = useState<"" | "LoadBalancer" | "NodePort">(
+    "",
+  );
   const [lokiRef, setLokiRef] = useState("");
   const [lokiInstances, setLokiInstances] = useState<CustomResource[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -50,12 +54,14 @@ export function MonitoringCreate() {
       replicas: 1,
       lokiRef: lokiRef || undefined,
       ingressHost: grafanaIngressHost,
+      exposeType: grafanaExposeType,
     };
     const prometheus: PrometheusCreateRequest = {
       name,
       namespace,
       replicas: 1,
       ingressHost: prometheusIngressHost,
+      exposeType: prometheusExposeType,
     };
 
     try {
@@ -152,6 +158,40 @@ export function MonitoringCreate() {
             Leave either empty to skip creating an Ingress for it. The portal has no built-in
             proxy for either — without a Grafana host, this instance won't be reachable (or
             embeddable in other resources' dashboards) through the portal at all.
+          </p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Expose (optional)</legend>
+          <div className="form-grid">
+            <div className="field">
+              <label>Grafana Service</label>
+              <select
+                value={grafanaExposeType}
+                onChange={(e) => setGrafanaExposeType(e.target.value as typeof grafanaExposeType)}
+              >
+                <option value="">Cluster-internal only</option>
+                <option value="LoadBalancer">LoadBalancer</option>
+                <option value="NodePort">NodePort</option>
+              </select>
+            </div>
+            <div className="field">
+              <label>Prometheus Service</label>
+              <select
+                value={prometheusExposeType}
+                onChange={(e) =>
+                  setPrometheusExposeType(e.target.value as typeof prometheusExposeType)
+                }
+              >
+                <option value="">Cluster-internal only</option>
+                <option value="LoadBalancer">LoadBalancer</option>
+                <option value="NodePort">NodePort</option>
+              </select>
+            </div>
+          </div>
+          <p className="hint">
+            Controls the type of each instance's own generated Service — independent of, and in
+            addition to, the Ingress above.
           </p>
         </fieldset>
 

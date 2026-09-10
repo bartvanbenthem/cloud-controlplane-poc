@@ -35,6 +35,7 @@ const (
 	KindGrafana    Kind = "grafanainstances"    // project-easter — paas.example.com
 	KindPrometheus Kind = "prometheusinstances" // project-easter — paas.example.com
 	KindLoki       Kind = "lokiinstances"       // project-easter — paas.example.com
+	KindAlloy      Kind = "alloyinstances"      // project-easter — paas.example.com
 )
 
 var kindGVRs = map[Kind]schema.GroupVersionResource{
@@ -49,6 +50,7 @@ var kindGVRs = map[Kind]schema.GroupVersionResource{
 	KindGrafana:    {Group: paasGroup, Version: paasVersion, Resource: string(KindGrafana)},
 	KindPrometheus: {Group: paasGroup, Version: paasVersion, Resource: string(KindPrometheus)},
 	KindLoki:       {Group: paasGroup, Version: paasVersion, Resource: string(KindLoki)},
+	KindAlloy:      {Group: paasGroup, Version: paasVersion, Resource: string(KindAlloy)},
 }
 
 // volumeGVR is the GVR for Volume resources the portal creates internally

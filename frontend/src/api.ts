@@ -1,4 +1,5 @@
 import type {
+  AlloyCreateRequest,
   ApiError,
   ClusterCreateRequest,
   CredentialsResponse,
@@ -13,6 +14,7 @@ import type {
   PrometheusCreateRequest,
   RabbitMQCreateRequest,
   ServerCreateRequest,
+  ServiceExposeInfo,
   ValkeyCreateRequest,
   Volume,
 } from "./types";
@@ -77,6 +79,11 @@ export const api = {
       `/api/resources/${kind}/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}/credentials`,
     ),
 
+  getServiceExpose: (kind: Kind, namespace: string, name: string) =>
+    request<ServiceExposeInfo>(
+      `/api/resources/${kind}/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}/service`,
+    ),
+
   createCluster: (body: ClusterCreateRequest) =>
     request<CustomResource>("/api/resources/clusters", {
       method: "POST",
@@ -139,6 +146,12 @@ export const api = {
 
   createLoki: (body: LokiCreateRequest) =>
     request<CustomResource>("/api/resources/lokiinstances", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  createAlloy: (body: AlloyCreateRequest) =>
+    request<CustomResource>("/api/resources/alloyinstances", {
       method: "POST",
       body: JSON.stringify(body),
     }),

@@ -9,7 +9,8 @@ export type Kind =
   | "kafkaclusters"
   | "grafanainstances"
   | "prometheusinstances"
-  | "lokiinstances";
+  | "lokiinstances"
+  | "alloyinstances";
 
 export interface Condition {
   type: string;
@@ -85,6 +86,15 @@ export interface CredentialSet {
  * credentials at all. */
 export interface CredentialsResponse {
   sets: CredentialSet[];
+  pending: boolean;
+}
+
+/** Response shape for GET .../service. `pending` means the resource's own
+ * Service is type LoadBalancer but the cloud load-balancer hasn't been
+ * provisioned an address yet — a normal, transient state, not a failure. */
+export interface ServiceExposeInfo {
+  type: string;
+  addresses?: string[];
   pending: boolean;
 }
 
@@ -171,6 +181,7 @@ export interface GrafanaCreateRequest {
   ingressHost?: string;
   ingressClassName?: string;
   ingressTlsSecretName?: string;
+  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export interface MariaDBCreateRequest {
@@ -234,6 +245,7 @@ export interface RabbitMQCreateRequest {
   ingressHost?: string;
   ingressClassName?: string;
   ingressTlsSecretName?: string;
+  exposeType?: "" | "LoadBalancer" | "NodePort";
   enablePodMonitor: boolean;
 }
 
@@ -252,6 +264,7 @@ export interface PrometheusCreateRequest {
   ingressHost?: string;
   ingressClassName?: string;
   ingressTlsSecretName?: string;
+  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export type LokiSize = "1x.demo" | "1x.pico" | "1x.extra-small" | "1x.small" | "1x.medium";
@@ -262,4 +275,11 @@ export interface LokiCreateRequest {
   size: LokiSize;
   storageClassName: string;
   objectStorageSecretName: string;
+}
+
+export interface AlloyCreateRequest {
+  name: string;
+  namespace: string;
+  lokiInstanceRef: string;
+  replicas: number;
 }

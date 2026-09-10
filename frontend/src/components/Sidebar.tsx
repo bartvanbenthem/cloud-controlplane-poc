@@ -82,8 +82,11 @@ export function Sidebar() {
           <NavLink to="/observability/monitoring" className={childClass}>
             Monitoring
           </NavLink>
-          <NavLink to="/observability/logging" className={childClass}>
+          <NavLink to="/observability/logging" end className={childClass}>
             Logging
+          </NavLink>
+          <NavLink to="/observability/logging/shippers" className={childClass}>
+            Log Shippers
           </NavLink>
         </NavGroup>
 

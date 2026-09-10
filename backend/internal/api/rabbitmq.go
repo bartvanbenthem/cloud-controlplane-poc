@@ -31,6 +31,11 @@ type RabbitMQRequest struct {
 	IngressClassName     string `json:"ingressClassName,omitempty"`
 	IngressTLSSecretName string `json:"ingressTlsSecretName,omitempty"`
 
+	// ExposeType, when non-empty, controls the type of the RabbitMQ Cluster
+	// Operator's own auto-generated Service fronting the cluster. One of
+	// "LoadBalancer"/"NodePort".
+	ExposeType string `json:"exposeType,omitempty"`
+
 	EnablePodMonitor bool `json:"enablePodMonitor"`
 }
 
@@ -59,6 +64,9 @@ func (r RabbitMQRequest) validate() error {
 	if r.IngressHost == "" && (r.IngressClassName != "" || r.IngressTLSSecretName != "") {
 		return fmt.Errorf("ingressHost is required when ingress class or TLS secret is set")
 	}
+	if r.ExposeType != "" && r.ExposeType != "LoadBalancer" && r.ExposeType != "NodePort" {
+		return fmt.Errorf("exposeType must be LoadBalancer or NodePort")
+	}
 	return nil
 }
 
@@ -80,6 +88,9 @@ func (r RabbitMQRequest) toUnstructured() *unstructured.Unstructured {
 	}
 	if r.IngressHost != "" {
 		spec["ingress"] = buildIngress(r.IngressHost, r.IngressClassName, r.IngressTLSSecretName)
+	}
+	if r.ExposeType != "" {
+		spec["expose"] = buildExpose(r.ExposeType)
 	}
 	spec["monitoring"] = map[string]interface{}{
 		"enablePodMonitor": r.EnablePodMonitor,

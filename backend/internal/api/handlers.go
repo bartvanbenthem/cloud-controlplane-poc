@@ -44,6 +44,7 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH /api/resources/{kind}/{namespace}/{name}", s.handlePatch)
 	mux.HandleFunc("DELETE /api/resources/{kind}/{namespace}/{name}", s.handleDelete)
 	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}/credentials", s.handleGetCredentials)
+	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}/service", s.handleGetServiceExpose)
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -268,6 +269,13 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 		obj = req.toUnstructured()
 	case KindLoki:
 		req := &LokiRequest{}
+		if status, err := decodeAndValidate(r, req); err != nil {
+			writeError(w, status, err)
+			return
+		}
+		obj = req.toUnstructured()
+	case KindAlloy:
+		req := &AlloyRequest{}
 		if status, err := decodeAndValidate(r, req); err != nil {
 			writeError(w, status, err)
 			return

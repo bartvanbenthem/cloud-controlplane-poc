@@ -42,6 +42,17 @@ the Dashboard:
     anything, since a LokiStack stands alone operationally. No
     credentials panel (its object storage Secret is caller-supplied, not
     operator-generated) and no auto-provisioned Grafana dashboard yet.
+  - **Log Shippers** — `AlloyInstance`, project-easter's thin front for the
+    Alloy Operator's Alloy. Deliberately minimal: the only field that
+    matters is `lokiInstanceRef` (which `LokiInstance`, in the same
+    namespace, to ship this namespace's pod logs to) — discovery,
+    relabeling, the push endpoint, and the namespace-scoped RBAC Alloy
+    needs are all derived automatically. Listed separately from Logging
+    itself (`/observability/logging/shippers`,
+    `frontend/src/pages/AlloyCreate.tsx` + the generic
+    `ResourceList`/`ResourceDetail`) rather than paired 1:1 like Grafana/
+    Prometheus, since it's a many-to-one relationship — more than one
+    `AlloyInstance` can ship to the same `LokiInstance`.
 - **Messaging** — also via project-easter:
   - **RabbitMQ** — `RabbitMQCluster`
   - **Kafka** — `KafkaCluster`
@@ -63,13 +74,15 @@ case.
 ## How it works
 
 - **Backend** (`backend/`, Go + [client-go](https://github.com/kubernetes/client-go)):
-  a REST API using a `dynamic.Interface` client against eleven CRDs across
+  a REST API using a `dynamic.Interface` client against twelve CRDs across
   two API groups — `compute.sostackit.dev/v1alpha1` `Cluster`/`Server`
   (plus `Volume`, created internally but not portal-facing — see below),
   and
-  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`MariaDBCluster`/`MongoDBCluster`/`RabbitMQCluster`/`KafkaCluster`/`GrafanaInstance`/`PrometheusInstance`/`LokiInstance`
+  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`MariaDBCluster`/`MongoDBCluster`/`RabbitMQCluster`/`KafkaCluster`/`GrafanaInstance`/`PrometheusInstance`/`LokiInstance`/`AlloyInstance`
   — via `GET/POST /api/resources/{kind}`, `GET/DELETE .../{namespace}/{name}`,
-  plus `GET /api/namespaces`. Runs in-cluster under its own ServiceAccount
+  a `PATCH` for `GrafanaInstance`'s `lokiRef` (the only field editable
+  after creation — see `MonitoringDetail`'s Loki-datasource panel), plus
+  `GET /api/namespaces`. Runs in-cluster under its own ServiceAccount
   (falls back to `$KUBECONFIG` / `~/.kube/config` for local dev), and
   serves the built frontend itself (embedded via `go:embed`) — one binary,
   one container.
@@ -123,7 +136,8 @@ case.
   `deploy/03-secret.example.yaml`), *not* per-user Kubernetes RBAC. Every
   write goes through the one ServiceAccount's permissions
   (`deploy/02-rbac.yaml`), scoped to `get/list/watch/create/delete` on
-  those eleven resource types, `get/list` on `namespaces`, and `get`
+  those twelve resource types (plus `patch`, `GrafanaInstance` only, for
+  its `lokiRef` edit), `get/list` on `namespaces`, and `get`
   (only — no `list`/`watch`) on `secrets` (see Credentials below) —
   nothing else, and no access to the vendor CRDs (CNPG's `Cluster`,
   valkey-operator's `ValkeyCluster`, mariadb-operator's `MariaDB`, the
@@ -229,22 +243,31 @@ controlplane-portal 8080:80` works fine for a POC.
   additional pools can be added with `kubectl` after the cluster exists.
 - The Database/Messaging forms cover the fields project-easter's own
   CRDs expose (deliberately minimal per its README's "Scope" section),
-  including the newer `expose`
-  (PostgresCluster/MariaDBCluster/ValkeyCluster/MongoDBCluster/KafkaCluster
-  — LoadBalancer/NodePort only, no annotations), `ingress`
-  (RabbitMQCluster — host/class/TLS secret only, no annotations), and
-  `monitoring` (`enablePodMonitor`, now on all six of PostgresCluster/
-  MariaDBCluster/ValkeyCluster/MongoDBCluster/RabbitMQCluster/KafkaCluster
-  — a PodMonitor or ServiceMonitor depending on what the underlying
-  vendor operator supports, plus an auto-provisioned Grafana dashboard
-  for that instance) fields — anything beyond that (CNPG backups/pooling,
-  Valkey ACLs, MariaDB Galera tuning, Mongo sharded topologies, RabbitMQ
-  plugins/TLS, Kafka dedicated controller/broker pools, ingress/expose
-  annotations, etc.) is out of scope here the same way it's out of
-  scope for project-easter itself.
-- The combined Monitoring install (`MonitoringCreate`) is deliberately
-  narrower than that: one name/namespace and an optional ingress host
-  per component, with everything else (version, replicas beyond 1,
-  persistence/storage, resources, retention, ingress class/TLS secret)
-  left at the operator's defaults. Edit the `GrafanaInstance`/`PrometheusInstance`
-  directly with `kubectl` afterwards for anything beyond that.
+  including `expose`
+  (PostgresCluster/MariaDBCluster/ValkeyCluster/MongoDBCluster/KafkaCluster/
+  GrafanaInstance/PrometheusInstance/RabbitMQCluster — LoadBalancer/NodePort
+  only, no annotations), `ingress`
+  (RabbitMQCluster/GrafanaInstance/PrometheusInstance — host/class/TLS
+  secret only, no annotations), and `monitoring` (`enablePodMonitor`, now
+  on all six of PostgresCluster/MariaDBCluster/ValkeyCluster/MongoDBCluster/
+  RabbitMQCluster/KafkaCluster — a PodMonitor or ServiceMonitor depending on
+  what the underlying vendor operator supports, plus an auto-provisioned
+  Grafana dashboard for that instance) fields — anything beyond that (CNPG
+  backups/pooling, Valkey ACLs, MariaDB Galera tuning, Mongo sharded
+  topologies, RabbitMQ plugins/TLS, Kafka dedicated controller/broker
+  pools, ingress/expose annotations, etc.) is out of scope here the same
+  way it's out of scope for project-easter itself.
+- The combined Monitoring install (`MonitoringCreate`) is narrower than
+  that: one name/namespace, an optional ingress host, and an optional
+  `expose` type per component, with everything else (version, replicas
+  beyond 1, persistence/storage, resources, retention, ingress class/TLS
+  secret) left at the operator's defaults. Edit the
+  `GrafanaInstance`/`PrometheusInstance` directly with `kubectl` afterwards
+  for anything beyond that (`lokiRef` aside — see `MonitoringDetail`'s
+  Loki-datasource panel above).
+- **Log Shippers** (`AlloyInstance`) form is even narrower still:
+  identity, `lokiInstanceRef`, and `replicas` — mirroring how minimal
+  `AlloyInstanceSpec` itself is (see `api/v1alpha1/alloyinstance_types.go`
+  in project-easter). No `ingress`/`expose` field exists on it at all — an
+  Alloy has no web UI worth exposing, it only pushes to its referenced
+  LokiInstance.

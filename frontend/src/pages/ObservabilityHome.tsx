@@ -5,6 +5,7 @@ import { api } from "../api";
 export function ObservabilityHome() {
   const [monitoringCount, setMonitoringCount] = useState<number | null>(null);
   const [loggingCount, setLoggingCount] = useState<number | null>(null);
+  const [shipperCount, setShipperCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -14,6 +15,10 @@ export function ObservabilityHome() {
     api
       .list("lokiinstances")
       .then((loki) => setLoggingCount(loki.length))
+      .catch((e) => setError(String(e.message ?? e)));
+    api
+      .list("alloyinstances")
+      .then((alloy) => setShipperCount(alloy.length))
       .catch((e) => setError(String(e.message ?? e)));
   }, []);
 
@@ -54,6 +59,17 @@ export function ObservabilityHome() {
           </p>
           <div className="category-stats">
             <span>{loggingCount ?? "…"} instances</span>
+          </div>
+        </Link>
+
+        <Link to="/observability/logging/shippers" className="category-card">
+          <h3>Log Shippers</h3>
+          <p className="muted">
+            Grafana Alloy, via project-easter's AlloyInstance — ships a namespace's pod logs to a
+            LokiInstance
+          </p>
+          <div className="category-stats">
+            <span>{shipperCount ?? "…"} instances</span>
           </div>
         </Link>
       </div>

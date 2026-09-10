@@ -32,6 +32,10 @@ type GrafanaRequest struct {
 	IngressHost          string `json:"ingressHost,omitempty"`
 	IngressClassName     string `json:"ingressClassName,omitempty"`
 	IngressTLSSecretName string `json:"ingressTlsSecretName,omitempty"`
+
+	// ExposeType, when non-empty, controls the type of the underlying
+	// Grafana's own generated Service. One of "LoadBalancer"/"NodePort".
+	ExposeType string `json:"exposeType,omitempty"`
 }
 
 func (r *GrafanaRequest) applyDefaults() {
@@ -52,6 +56,9 @@ func (r GrafanaRequest) validate() error {
 	}
 	if r.IngressHost == "" && (r.IngressClassName != "" || r.IngressTLSSecretName != "") {
 		return fmt.Errorf("ingressHost is required when ingress class or TLS secret is set")
+	}
+	if r.ExposeType != "" && r.ExposeType != "LoadBalancer" && r.ExposeType != "NodePort" {
+		return fmt.Errorf("exposeType must be LoadBalancer or NodePort")
 	}
 	return nil
 }
@@ -83,6 +90,9 @@ func (r GrafanaRequest) toUnstructured() *unstructured.Unstructured {
 	}
 	if r.IngressHost != "" {
 		spec["ingress"] = buildIngress(r.IngressHost, r.IngressClassName, r.IngressTLSSecretName)
+	}
+	if r.ExposeType != "" {
+		spec["expose"] = buildExpose(r.ExposeType)
 	}
 
 	obj := &unstructured.Unstructured{}

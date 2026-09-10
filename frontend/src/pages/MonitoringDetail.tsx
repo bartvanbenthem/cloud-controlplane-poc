@@ -5,6 +5,7 @@ import type { CustomResource } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
 import { CredentialsPanel } from "../components/CredentialsPanel";
 import { LokiDatasourcePanel } from "../components/LokiDatasourcePanel";
+import { GrafanaPublicIpPanel } from "../components/GrafanaPublicIpPanel";
 import { grafanaIngressUrl } from "../grafanaIngress";
 
 /** Grafana and Prometheus are installed together by MonitoringCreate and
@@ -141,6 +142,7 @@ export function MonitoringDetail() {
       {grafana && (
         <>
           <CredentialsPanel kind="grafanainstances" namespace={grafana.metadata.namespace} name={grafana.metadata.name} />
+          <GrafanaPublicIpPanel namespace={grafana.metadata.namespace} grafana={grafana} />
           <LokiDatasourcePanel namespace={grafana.metadata.namespace} grafana={grafana} onUpdated={setGrafana} />
         </>
       )}

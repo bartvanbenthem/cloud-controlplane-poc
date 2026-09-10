@@ -28,6 +28,18 @@
 # MonitoringCreate's ingress fields and GrafanaDashboardEmbed.tsx) — so
 # there's no portforward/tunnel grant here either.
 #
+# The "services"/get grant backs the Monitoring detail page's Public IP
+# panel (backend/internal/api/expose.go): once a GrafanaInstance is created
+# with expose.type: LoadBalancer, reading its external address means
+# reading grafana-operator's own generated "<name>-service" Service's
+# status.loadBalancer.ingress -- GrafanaInstance's own status has no such
+# field, only the underlying Service does. Same shape as the "secrets"/get
+# grant above: RBAC can't scope "get" to only Services matching a name
+# pattern, so this SA can in principle `get` any Service by name in any
+# namespace, but the backend only ever constructs "<name>-service" itself
+# for a GrafanaInstance it already confirmed exists. No "list"/"watch" on
+# services, so it can't enumerate them.
+#
 # The "persistentvolumeclaims" grant backs the Storage/Volumes page
 # (backend/internal/api/volumes.go): listing PVCs (cross-referenced
 # against Pods to show Attached/Detached), and deleting one once it's
@@ -74,6 +86,7 @@ rules:
         "kafkaclusters",
         "prometheusinstances",
         "lokiinstances",
+        "alloyinstances",
       ]
     verbs: ["get", "list", "watch", "create", "delete"]
   # grafanainstances gets its own rule, split out from the block above,
@@ -94,6 +107,9 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
     verbs: ["get", "list", "delete", "patch"]
