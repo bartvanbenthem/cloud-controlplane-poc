@@ -23,6 +23,7 @@ import { KafkaCreate } from "./pages/KafkaCreate";
 import { MonitoringList } from "./pages/MonitoringList";
 import { MonitoringCreate } from "./pages/MonitoringCreate";
 import { MonitoringDetail } from "./pages/MonitoringDetail";
+import { LoggingCreate } from "./pages/LoggingCreate";
 import type { CustomResource } from "./types";
 
 function summarizeCluster(r: CustomResource): string {
@@ -68,6 +69,11 @@ function summarizeRabbitMQ(r: CustomResource): string {
 function summarizeKafka(r: CustomResource): string {
   const spec = r.spec as { replicas?: number; version?: string };
   return [`${spec.replicas ?? "?"} replica(s)`, spec.version].filter(Boolean).join(" · ");
+}
+
+function summarizeLoki(r: CustomResource): string {
+  const spec = r.spec as { size?: string; storageClassName?: string };
+  return [spec.size, spec.storageClassName && `sc ${spec.storageClassName}`].filter(Boolean).join(" · ");
 }
 
 export default function App() {
@@ -208,15 +214,26 @@ export default function App() {
           <Route path="/observability/monitoring" element={<MonitoringList />} />
           <Route path="/observability/monitoring/new" element={<MonitoringCreate />} />
           <Route path="/observability/monitoring/:namespace/:name" element={<MonitoringDetail />} />
+
+          {/* Logging — project-easter's LokiInstance, a thin front for a
+              Loki Operator LokiStack. */}
           <Route
             path="/observability/logging"
             element={
-              <Placeholder
+              <ResourceList
+                kind="lokiinstances"
                 title="Logging"
-                tagline="Log aggregation."
-                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+                basePath="/observability/logging"
+                createPath="/observability/logging/new"
+                itemLabel="Logging Instance"
+                summarize={summarizeLoki}
               />
             }
+          />
+          <Route path="/observability/logging/new" element={<LoggingCreate />} />
+          <Route
+            path="/observability/logging/:namespace/:name"
+            element={<ResourceDetail kind="lokiinstances" listPath="/observability/logging" />}
           />
 
           {/* Messaging */}

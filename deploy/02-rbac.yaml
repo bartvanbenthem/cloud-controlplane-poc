@@ -4,9 +4,9 @@
 # access at all, and (with one deliberate exception below, for Grafana) no
 # access to the vendor CRDs (CNPG's Cluster, valkey-operator's
 # ValkeyCluster, mariadb-operator's MariaDB, RabbitMQ Cluster Operator's
-# RabbitmqCluster, Prometheus Operator's Prometheus) these paas.example.com
-# CRs front — that's project-easter's own ServiceAccount's job, not this
-# portal's.
+# RabbitmqCluster, Prometheus Operator's Prometheus, Loki Operator's
+# LokiStack) these paas.example.com CRs front — that's project-easter's own
+# ServiceAccount's job, not this portal's.
 #
 # The "secrets"/get grant is a deliberate, narrow exception to "no core
 # workload access": it backs the credentials panel on the
@@ -79,6 +79,7 @@ rules:
         "kafkaclusters",
         "grafanainstances",
         "prometheusinstances",
+        "lokiinstances",
       ]
     verbs: ["get", "list", "watch", "create", "delete"]
   - apiGroups: [""]

@@ -48,10 +48,12 @@ type CredentialsResponse struct {
 // credentials unless disableDefaultAdminSecret is set (which
 // project-easter never does), and the Percona Server for MongoDB Operator
 // always writes its own multi-user secrets.users Secret regardless of what
-// MongoDBClusterSpec sets. ValkeyCluster, KafkaCluster, and
-// PrometheusInstance have no credentials to read — none of this operator,
-// the underlying vendor, or (for Kafka) any listener auth config sets up
-// authentication for them — so those kinds 404 here.
+// MongoDBClusterSpec sets. ValkeyCluster, KafkaCluster,
+// PrometheusInstance, and LokiInstance have no credentials to read — none
+// of this operator, the underlying vendor, or (for Kafka) any listener auth
+// config sets up authentication for them, and LokiInstance's
+// objectStorage.secretName references a Secret the caller supplies rather
+// than one project-easter generates — so those kinds 404 here.
 func (s *Server) handleGetCredentials(w http.ResponseWriter, r *http.Request) {
 	kind, err := parseKind(r.PathValue("kind"))
 	if err != nil {

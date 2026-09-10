@@ -6,6 +6,7 @@ import type {
   GrafanaCreateRequest,
   KafkaCreateRequest,
   Kind,
+  LokiCreateRequest,
   MariaDBCreateRequest,
   MongoDBCreateRequest,
   PostgresCreateRequest,
@@ -132,6 +133,12 @@ export const api = {
 
   createPrometheus: (body: PrometheusCreateRequest) =>
     request<CustomResource>("/api/resources/prometheusinstances", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  createLoki: (body: LokiCreateRequest) =>
+    request<CustomResource>("/api/resources/lokiinstances", {
       method: "POST",
       body: JSON.stringify(body),
     }),

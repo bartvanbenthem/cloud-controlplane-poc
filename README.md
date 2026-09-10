@@ -19,17 +19,29 @@ the Dashboard:
   [project-easter](https://github.com/bartvanbenthem/project-easter) (a
   meta-operator fronting CloudNativePG, valkey-operator,
   mariadb-operator, the Percona Server for MongoDB Operator, RabbitMQ
-  Cluster Operator, Strimzi, grafana-operator, and the Prometheus
-  Operator with its own thin `paas.example.com/v1alpha1` CRDs):
+  Cluster Operator, Strimzi, grafana-operator, the Prometheus Operator,
+  and the Loki Operator, with its own thin `paas.example.com/v1alpha1`
+  CRDs):
   - **PostgreSQL** — `PostgresCluster`
   - **Redis** — `ValkeyCluster` (Valkey)
   - **MariaDB** — `MariaDBCluster`
   - **MongoDB** — `MongoDBCluster`
-- **Observability** — also via project-easter, both kinds under one
-  "Monitoring" list/create page since they're the same operational
-  concern:
-  - **Monitoring** — `GrafanaInstance` and `PrometheusInstance`
-  - **Logging** — a placeholder for this POC. No operator/CRD wired up yet.
+- **Observability** — also via project-easter:
+  - **Monitoring** — `GrafanaInstance` and `PrometheusInstance`, both under
+    one "Monitoring" list/create page since they're the same operational
+    concern (see below)
+  - **Logging** — `LokiInstance`, project-easter's thin front for a Loki
+    Operator `LokiStack`. Unlike every other "instance"-shaped building
+    block here, it has no ephemeral-storage mode: a `storageClassName` and
+    an existing S3-compatible object storage Secret
+    (`objectStorage.secretName`) are both required, and it's sized by a
+    t-shirt size (`spec.size`, e.g. `1x.demo`) rather than a replica count.
+    Has its own list/create/detail pages
+    (`frontend/src/pages/LoggingCreate.tsx` + the generic
+    `ResourceList`/`ResourceDetail`) rather than being paired with
+    anything, since a LokiStack stands alone operationally. No
+    credentials panel (its object storage Secret is caller-supplied, not
+    operator-generated) and no auto-provisioned Grafana dashboard yet.
 - **Messaging** — also via project-easter:
   - **RabbitMQ** — `RabbitMQCluster`
   - **Kafka** — `KafkaCluster`
@@ -51,11 +63,11 @@ case.
 ## How it works
 
 - **Backend** (`backend/`, Go + [client-go](https://github.com/kubernetes/client-go)):
-  a REST API using a `dynamic.Interface` client against ten CRDs across
+  a REST API using a `dynamic.Interface` client against eleven CRDs across
   two API groups — `compute.sostackit.dev/v1alpha1` `Cluster`/`Server`
   (plus `Volume`, created internally but not portal-facing — see below),
   and
-  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`MariaDBCluster`/`MongoDBCluster`/`RabbitMQCluster`/`KafkaCluster`/`GrafanaInstance`/`PrometheusInstance`
+  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`MariaDBCluster`/`MongoDBCluster`/`RabbitMQCluster`/`KafkaCluster`/`GrafanaInstance`/`PrometheusInstance`/`LokiInstance`
   — via `GET/POST /api/resources/{kind}`, `GET/DELETE .../{namespace}/{name}`,
   plus `GET /api/namespaces`. Runs in-cluster under its own ServiceAccount
   (falls back to `$KUBECONFIG` / `~/.kube/config` for local dev), and
@@ -95,23 +107,26 @@ case.
   anonymous Viewer access becomes available to anything that can reach
   the instance's Service directly, not just requests routed through the
   portal) — this only applies to GrafanaInstances created after that was
-  added; older ones aren't retroactively reconfigured. Logging,
-  Buckets, Vault, GitOps Instance, and Container Registry are static
-  placeholder pages — no backend calls. No build step at
-  runtime — it's static files served by the Go backend.
+  added; older ones aren't retroactively reconfigured. Logging
+  (`LokiInstance`) has its own list/create/detail pages backed by the API,
+  same as the database/messaging kinds. Buckets, Vault, GitOps Instance,
+  and Container Registry remain static placeholder pages — no backend
+  calls. No build step at runtime — it's static files served by the Go
+  backend.
 - **Auth**: a single shared HTTP Basic Auth credential in front of the
   whole API (`AUTH_USERNAME`/`AUTH_PASSWORD` env vars — see
   `deploy/03-secret.example.yaml`), *not* per-user Kubernetes RBAC. Every
   write goes through the one ServiceAccount's permissions
   (`deploy/02-rbac.yaml`), scoped to `get/list/watch/create/delete` on
-  those ten resource types, `get/list` on `namespaces`, and `get`
+  those eleven resource types, `get/list` on `namespaces`, and `get`
   (only — no `list`/`watch`) on `secrets` (see Credentials below) —
   nothing else, and no access to the vendor CRDs (CNPG's `Cluster`,
   valkey-operator's `ValkeyCluster`, mariadb-operator's `MariaDB`, the
   Percona Server for MongoDB Operator's `PerconaServerMongoDB`, RabbitMQ
   Cluster Operator's `RabbitmqCluster`, Strimzi's `Kafka`,
-  grafana-operator's `Grafana`, Prometheus Operator's `Prometheus`) that
-  project-easter's own ServiceAccount reconciles the paas CRs into. If
+  grafana-operator's `Grafana`, Prometheus Operator's `Prometheus`, the
+  Loki Operator's `LokiStack`) that project-easter's own ServiceAccount
+  reconciles the paas CRs into. If
   you need writes attributed to the real user (audit trail, per-user
   RBAC), swap this for OIDC + Kubernetes impersonation — that's a
   meaningfully bigger change, not a config flag.
@@ -127,7 +142,10 @@ case.
   so a same-named PostgresCluster and MariaDBCluster in one namespace
   can't collide on CNPG's unscoped `<name>-app` default), with password/URI fields
   masked behind a per-field Show/Hide toggle. ValkeyCluster, KafkaCluster,
-  and PrometheusInstance have no auth configured, so they don't get one. This
+  PrometheusInstance, and LokiInstance have no auth configured, so they
+  don't get one — LokiInstance's object storage Secret is one the caller
+  supplies themselves, not one an operator generates for the portal to
+  read out. This
   is why the portal's ServiceAccount has `get` on core `secrets`: RBAC
   can't scope `get` to only secrets matching a name pattern, so in
   principle this ServiceAccount can read any Secret by name in any

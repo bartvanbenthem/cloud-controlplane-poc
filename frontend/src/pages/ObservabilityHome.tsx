@@ -4,11 +4,16 @@ import { api } from "../api";
 
 export function ObservabilityHome() {
   const [monitoringCount, setMonitoringCount] = useState<number | null>(null);
+  const [loggingCount, setLoggingCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([api.list("grafanainstances"), api.list("prometheusinstances")])
       .then(([grafana, prometheus]) => setMonitoringCount(grafana.length + prometheus.length))
+      .catch((e) => setError(String(e.message ?? e)));
+    api
+      .list("lokiinstances")
+      .then((loki) => setLoggingCount(loki.length))
       .catch((e) => setError(String(e.message ?? e)));
   }, []);
 
@@ -44,9 +49,11 @@ export function ObservabilityHome() {
 
         <Link to="/observability/logging" className="category-card">
           <h3>Logging</h3>
-          <p className="muted">Log aggregation</p>
+          <p className="muted">
+            Loki, via project-easter's LokiInstance
+          </p>
           <div className="category-stats">
-            <span className="muted">Not integrated yet</span>
+            <span>{loggingCount ?? "…"} instances</span>
           </div>
         </Link>
       </div>
