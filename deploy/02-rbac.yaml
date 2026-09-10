@@ -22,17 +22,11 @@
 # application-level constraint, not one RBAC enforces. This SA still has
 # no "list"/"watch" on secrets, so it can't enumerate them.
 #
-# The "pods"/get+list and "pods/portforward"/create grants are the other
-# deliberate exception: they back the "Open Grafana" proxy
-# (backend/internal/api/grafana_proxy.go), which reaches a GrafanaInstance's
-# UI by tunneling through the API server's portforward subresource — the
-# same mechanism `kubectl port-forward` uses — rather than requiring
-# cluster-internal Service networking or an Ingress. The proxy handler
-# only ever port-forwards to a pod it found itself via an "app=<name>"
-# label selector, and only after confirming a GrafanaInstance named
-# <name> exists in that namespace, so this can't be used to reach an
-# arbitrary pod by name — but RBAC itself doesn't scope portforward to
-# Grafana pods specifically, so this SA can port-forward to any pod.
+# The "pods"/get+list grant backs the Storage/Volumes page's PVC-attachment
+# cross-reference (see below). The portal has no Grafana proxy of any kind
+# any more — Grafana is only ever reached through its own Ingress (see
+# MonitoringCreate's ingress fields and GrafanaDashboardEmbed.tsx) — so
+# there's no portforward/tunnel grant here either.
 #
 # The "persistentvolumeclaims" grant backs the Storage/Volumes page
 # (backend/internal/api/volumes.go): listing PVCs (cross-referenced
@@ -44,14 +38,15 @@
 # The "grafana.integreatly.org"/"grafanas" get+update grant is the one
 # place this portal reaches past its own paas.example.com CRDs into a
 # vendor one (see backend/internal/api/grafana_provision.go): Grafana has
-# to be told (via that CRD's own spec.config) that it's being served from
-# a sub-path, or its assets/redirects break under the "Open Grafana"
-# proxy above — GrafanaInstance has no field for this, so there's no way
-# to ask project-easter's controller to set it on our behalf. This SA can
-# therefore read/modify any vendor Grafana object's config by name, not
-# just ones created through this portal — the application only ever does
-# so for a GrafanaInstance it just created itself, but RBAC doesn't
-# enforce that scoping.
+# to be told (via that CRD's own spec.config) to allow embedding and accept
+# anonymous Viewer sessions, or GrafanaDashboardEmbed.tsx's <iframe> can't
+# render it inline on a resource's own detail page — GrafanaInstance has no
+# field for either, so there's no way to ask project-easter's controller to
+# set them on our behalf. This SA can therefore read/modify any vendor
+# Grafana object's config by name, not just ones created through this
+# portal — the application only ever does so for a GrafanaInstance it just
+# created itself (and only when it was given an ingress host — see
+# provisionGrafanaEmbedding), but RBAC doesn't enforce that scoping.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -99,9 +94,6 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list"]
-  - apiGroups: [""]
-    resources: ["pods/portforward"]
-    verbs: ["create"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
     verbs: ["get", "list", "delete", "patch"]

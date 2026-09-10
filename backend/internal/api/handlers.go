@@ -19,13 +19,12 @@ import (
 )
 
 type Server struct {
-	clients        *k8s.Clients
-	log            *slog.Logger
-	grafanaTunnels *grafanaTunnels
+	clients *k8s.Clients
+	log     *slog.Logger
 }
 
 func NewServer(clients *k8s.Clients, log *slog.Logger) *Server {
-	return &Server{clients: clients, log: log, grafanaTunnels: newGrafanaTunnels()}
+	return &Server{clients: clients, log: log}
 }
 
 // Register mounts the API's routes onto mux. Kept separate from the
@@ -45,8 +44,6 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH /api/resources/{kind}/{namespace}/{name}", s.handlePatch)
 	mux.HandleFunc("DELETE /api/resources/{kind}/{namespace}/{name}", s.handleDelete)
 	mux.HandleFunc("GET /api/resources/{kind}/{namespace}/{name}/credentials", s.handleGetCredentials)
-
-	mux.HandleFunc("/grafana/{namespace}/{name}/{rest...}", s.handleGrafanaProxy)
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -292,11 +289,15 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	s.log.Info("created resource", "kind", kind, "namespace", created.GetNamespace(), "name", created.GetName())
 	if kind == KindGrafana {
-		scheme := "http"
-		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
-			scheme = "https"
+		// Only instances created with an ingress host can be embedded at
+		// all (see provisionGrafanaEmbedding's doc comment) -- one without
+		// has no URL for GrafanaDashboardEmbed's <iframe> to point at, so
+		// there's nothing to provision.
+		host, _, _ := unstructured.NestedString(created.Object, "spec", "ingress", "host")
+		if host != "" {
+			tlsSecret, _, _ := unstructured.NestedString(created.Object, "spec", "ingress", "tlsSecretName")
+			go s.provisionGrafanaEmbedding(created.GetNamespace(), created.GetName(), host, tlsSecret)
 		}
-		go s.provisionGrafanaSubPath(created.GetNamespace(), created.GetName(), scheme, r.Host)
 	}
 	if bootVolume != nil {
 		// Own the boot volume by the Server it backs, so deleting the

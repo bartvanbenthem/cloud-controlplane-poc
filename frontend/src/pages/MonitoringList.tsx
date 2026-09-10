@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { CustomResource } from "../types";
+import { grafanaIngressUrl } from "../grafanaIngress";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -14,13 +15,6 @@ interface MonitoringInstance {
 
 function readyCondition(r?: CustomResource) {
   return r?.status?.conditions?.find((c) => c.type === "Ready");
-}
-
-/** Every GrafanaInstance is reachable through the portal's own
- * /grafana/{namespace}/{name}/ proxy (see backend's grafana_proxy.go) once
- * it's Ready — no ingress host or NodePort needed. */
-function grafanaProxyUrl(instance: MonitoringInstance): string {
-  return `/grafana/${instance.namespace}/${instance.name}/`;
 }
 
 /** Both GrafanaInstance and PrometheusInstance have to be Ready for
@@ -159,20 +153,24 @@ export function MonitoringList() {
                   <CombinedStatusBadge instance={instance} />
                 </td>
                 <td>
-                  {readyCondition(instance.grafana)?.status === "True" ? (
-                    <a
-                      className="btn-link"
-                      href={grafanaProxyUrl(instance)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open ↗
-                    </a>
-                  ) : (
-                    <span className="muted" title="Grafana isn't Ready yet">
-                      –
-                    </span>
-                  )}
+                  {(() => {
+                    const url = grafanaIngressUrl(instance.grafana);
+                    if (!url || readyCondition(instance.grafana)?.status !== "True") {
+                      return (
+                        <span
+                          className="muted"
+                          title={!url ? "No ingress host configured" : "Grafana isn't Ready yet"}
+                        >
+                          –
+                        </span>
+                      );
+                    }
+                    return (
+                      <a className="btn-link" href={`${url}/`} target="_blank" rel="noreferrer">
+                        Open ↗
+                      </a>
+                    );
+                  })()}
                 </td>
                 <td className="muted">
                   {age((instance.grafana ?? instance.prometheus)?.metadata.creationTimestamp)}

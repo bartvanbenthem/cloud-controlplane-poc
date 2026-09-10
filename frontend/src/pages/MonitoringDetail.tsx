@@ -5,6 +5,7 @@ import type { CustomResource } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
 import { CredentialsPanel } from "../components/CredentialsPanel";
 import { LokiDatasourcePanel } from "../components/LokiDatasourcePanel";
+import { grafanaIngressUrl } from "../grafanaIngress";
 
 /** Grafana and Prometheus are installed together by MonitoringCreate and
  * neither is useful without the other (Grafana has nothing to query,
@@ -14,24 +15,6 @@ import { LokiDatasourcePanel } from "../components/LokiDatasourcePanel";
  * install behind. */
 function readyCondition(r?: CustomResource | null) {
   return r?.status?.conditions?.find((c) => c.type === "Ready");
-}
-
-/** Every GrafanaInstance is reachable through the portal's own
- * /grafana/{namespace}/{name}/ proxy (see backend's grafana_proxy.go) once
- * it's Ready — no ingress host or NodePort needed. */
-function grafanaProxyUrl(namespace: string, name: string): string {
-  return `/grafana/${namespace}/${name}/`;
-}
-
-/** ingressUrl is a secondary, optional escape hatch for instances also
- * given an external ingress host (see MonitoringCreate) — a real
- * standalone URL, useful outside the portal (e.g. embedding elsewhere),
- * unlike the always-on proxy link above. */
-function ingressUrl(r?: CustomResource | null): string | null {
-  const ingress = (r?.spec as { ingress?: { host?: string; tlsSecretName?: string } } | undefined)
-    ?.ingress;
-  if (!ingress?.host) return null;
-  return `${ingress.tlsSecretName ? "https" : "http"}://${ingress.host}/`;
 }
 
 export function MonitoringDetail() {
@@ -109,24 +92,27 @@ export function MonitoringDetail() {
       <div className="page-header">
         <h2>{name}</h2>
         <div className="actions-row" style={{ marginTop: 0 }}>
-          {readyCondition(grafana)?.status === "True" ? (
+          {grafanaIngressUrl(grafana) && readyCondition(grafana)?.status === "True" ? (
             <a
               className="btn secondary"
-              href={grafanaProxyUrl(namespace, name)}
+              href={`${grafanaIngressUrl(grafana)}/`}
               target="_blank"
               rel="noreferrer"
             >
               Open Grafana ↗
             </a>
           ) : (
-            <button className="btn secondary" disabled title="Grafana isn't Ready yet">
+            <button
+              className="btn secondary"
+              disabled
+              title={
+                !grafanaIngressUrl(grafana)
+                  ? "No ingress host configured for this Grafana instance"
+                  : "Grafana isn't Ready yet"
+              }
+            >
               Open Grafana ↗
             </button>
-          )}
-          {ingressUrl(grafana) && (
-            <a className="btn-link" href={ingressUrl(grafana)!} target="_blank" rel="noreferrer">
-              External URL ↗
-            </a>
           )}
           <button className="btn danger" onClick={handleDelete} disabled={deleting}>
             {deleting ? "Deleting…" : "Delete"}

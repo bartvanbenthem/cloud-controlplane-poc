@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { CustomResource, Kind } from "../types";
+import { grafanaIngressUrl } from "../grafanaIngress";
 
 /** Static per-kind info to build a Grafana embed URL for a resource's
  * auto-provisioned dashboard. project-easter bakes a fixed dashboard JSON
@@ -53,6 +54,11 @@ const DASHBOARDS: Partial<
  *    grafana.go InstanceSelector), so zero is "nothing to embed into" and
  *    more than one is ambiguous; this picks the first Ready one found
  *    rather than guessing further.
+ *  - that GrafanaInstance has `spec.ingress.host` set — the portal no
+ *    longer proxies to Grafana itself, so the iframe embeds it directly at
+ *    its own Ingress host; one without an ingress host has no URL to embed
+ *    at all (see backend/internal/api/grafana_provision.go, which also
+ *    only configures allow_embedding/anonymous auth for instances with one).
  *
  * Renders nothing rather than an error state when any of these don't
  * hold, the same way CredentialsPanel renders nothing on a 404.
@@ -72,7 +78,7 @@ export function GrafanaDashboardEmbed({
   const monitoring = resource.spec.monitoring as { enablePodMonitor?: boolean } | undefined;
   const enabled = Boolean(dashboard) && Boolean(monitoring?.enablePodMonitor);
 
-  const [grafanaInstance, setGrafanaInstance] = useState<string | null>(null);
+  const [grafanaUrl, setGrafanaUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -84,21 +90,21 @@ export function GrafanaDashboardEmbed({
         const ready = instances.find(
           (i) => i.status?.conditions?.find((c) => c.type === "Ready")?.status === "True",
         );
-        setGrafanaInstance(ready?.metadata.name ?? null);
+        setGrafanaUrl(grafanaIngressUrl(ready));
       })
-      .catch(() => !cancelled && setGrafanaInstance(null));
+      .catch(() => !cancelled && setGrafanaUrl(null));
     return () => {
       cancelled = true;
     };
   }, [enabled, namespace]);
 
-  if (!enabled || !dashboard || !grafanaInstance) return null;
+  if (!enabled || !dashboard || !grafanaUrl) return null;
 
   const params = new URLSearchParams({ kiosk: "" });
   for (const [key, value] of Object.entries(dashboard.vars?.(namespace, name) ?? {})) {
     params.set(`var-${key}`, value);
   }
-  const src = `/grafana/${namespace}/${grafanaInstance}/d/${dashboard.uid}?${params.toString()}`;
+  const src = `${grafanaUrl}/d/${dashboard.uid}?${params.toString()}`;
 
   return (
     <div className="panel">

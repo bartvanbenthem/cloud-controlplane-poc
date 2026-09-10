@@ -99,15 +99,20 @@ case.
   resource's own namespace to embed from (project-easter's
   GrafanaDashboard→Grafana matching is a namespace-scoped label selector,
   so this picks the first Ready instance found there — ambiguous if a
-  namespace has more than one). Reuses the same `/grafana/{namespace}/{name}/`
-  proxy and `security.allow_embedding`/anonymous-Viewer setup
-  `backend/internal/api/grafana_provision.go`'s `setGrafanaSubPath`
-  already does for the "Open Grafana ↗" link on `MonitoringDetail` (with
-  a security tradeoff spelled out in that function's doc comment:
-  anonymous Viewer access becomes available to anything that can reach
-  the instance's Service directly, not just requests routed through the
-  portal) — this only applies to GrafanaInstances created after that was
-  added; older ones aren't retroactively reconfigured. Logging
+  namespace has more than one). The portal has no Grafana proxy of its
+  own — Grafana is only ever reached directly through its own Ingress, so
+  the embed (and the "Open Grafana ↗" link on `MonitoringDetail`/
+  `MonitoringList`) only works for a `GrafanaInstance` created with an
+  ingress host (see `MonitoringCreate`'s ingress fields); one without is
+  simply not embeddable/linkable. `backend/internal/api/
+  grafana_provision.go`'s `setGrafanaEmbedConfig` sets the
+  `security.allow_embedding`/anonymous-Viewer config every such instance
+  needs for the iframe to render at all (with a security tradeoff spelled
+  out in that function's doc comment: anonymous Viewer access becomes
+  available to anything that can reach the instance's Ingress host
+  directly, not just the embedded iframe) — this only applies to
+  GrafanaInstances created with an ingress host after that provisioning
+  was added; older ones aren't retroactively reconfigured. Logging
   (`LokiInstance`) has its own list/create/detail pages backed by the API,
   same as the database/messaging kinds. Buckets, Vault, GitOps Instance,
   and Container Registry remain static placeholder pages — no backend
