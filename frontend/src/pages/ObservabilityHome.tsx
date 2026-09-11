@@ -31,8 +31,10 @@ export function ObservabilityHome() {
           <LifecycleBadge status="preview" />
         </div>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Monitoring and observability tooling, via{" "}
+      <p className="page-description">
+        Metrics, dashboards, and log aggregation for your workloads — Monitoring gives you
+        Grafana &amp; Prometheus, while Logging and Log Shippers collect and query pod logs.
+        Fronted by{" "}
         <a
           href="https://github.com/bartvanbenthem/project-easter"
           target="_blank"
@@ -40,7 +42,7 @@ export function ObservabilityHome() {
         >
           project-easter
         </a>
-        .
+        's thin CRDs over the underlying operators.
       </p>
       {error && <div className="error-banner">{error}</div>}
 

@@ -27,8 +27,9 @@ export function RuntimeHome() {
           <LifecycleBadge status="ga" />
         </div>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Where your workloads actually run — one page per platform.
+      <p className="page-description">
+        Where your workloads actually run. Pick Kubernetes for containerized workloads, or a
+        Virtual Machine for anything that needs to run outside a cluster.
       </p>
       {error && <div className="error-banner">{error}</div>}
 

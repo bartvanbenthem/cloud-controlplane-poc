@@ -122,9 +122,10 @@ export function MonitoringList() {
           + Install Monitoring
         </Link>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
+      <p className="page-description">
         Grafana &amp; Prometheus, deployed and managed together as one monitoring stack via
-        project-easter's GrafanaInstance and PrometheusInstance.
+        project-easter's GrafanaInstance and PrometheusInstance — Prometheus scrapes metrics,
+        Grafana visualizes them, and the two are created, viewed, and deleted as a pair.
       </p>
 
       {error && <div className="error-banner">{error}</div>}

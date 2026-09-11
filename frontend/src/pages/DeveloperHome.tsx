@@ -10,8 +10,9 @@ export function DeveloperHome() {
           <LifecycleBadge status="roadmap" />
         </div>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Continuous delivery and container image tooling for your workloads.
+      <p className="page-description">
+        Continuous delivery and container image tooling for your workloads. Both GitOps and
+        Container Registry are on the roadmap — no operator/CRD is wired up yet for this POC.
       </p>
 
       <div className="category-grid">

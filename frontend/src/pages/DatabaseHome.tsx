@@ -34,8 +34,9 @@ export function DatabaseHome() {
           <LifecycleBadge status="preview" />
         </div>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Managed database and cache building blocks, via{" "}
+      <p className="page-description">
+        Managed, operator-backed databases and caches for your workloads. Pick a technology below
+        to provision an instance — all fronted by{" "}
         <a
           href="https://github.com/bartvanbenthem/project-easter"
           target="_blank"
@@ -43,7 +44,7 @@ export function DatabaseHome() {
         >
           project-easter
         </a>
-        .
+        's thin CRDs over the underlying operator.
       </p>
       {error && <div className="error-banner">{error}</div>}
 

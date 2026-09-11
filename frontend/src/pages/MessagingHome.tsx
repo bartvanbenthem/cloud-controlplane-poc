@@ -25,8 +25,9 @@ export function MessagingHome() {
           <LifecycleBadge status="preview" />
         </div>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Message queues and event streaming, via{" "}
+      <p className="page-description">
+        Message queues and event streaming for decoupling services — RabbitMQ for
+        request/task-style queuing, Kafka for high-throughput event streams. Fronted by{" "}
         <a
           href="https://github.com/bartvanbenthem/project-easter"
           target="_blank"
@@ -34,7 +35,7 @@ export function MessagingHome() {
         >
           project-easter
         </a>
-        .
+        's thin CRDs over the underlying operators.
       </p>
       {error && <div className="error-banner">{error}</div>}
 

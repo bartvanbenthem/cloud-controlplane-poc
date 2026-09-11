@@ -103,7 +103,7 @@ export default function App() {
               <ResourceList
                 kind="clusters"
                 title="Kubernetes Clusters"
-                description="Managed Kubernetes clusters on STACKIT, provisioned via stackit-compute-operator."
+                description="Managed Kubernetes clusters on STACKIT Kubernetes Engine (SKE), provisioned and lifecycle-managed via stackit-compute-operator. Create a cluster here, then deploy workloads to it like any other Kubernetes cluster."
                 lifecycle="ga"
                 basePath="/runtime/stackit"
                 createPath="/runtime/stackit/new"
@@ -124,7 +124,7 @@ export default function App() {
               <ResourceList
                 kind="servers"
                 title="Virtual Machines"
-                description="STACKIT Compute Engine virtual machines, provisioned via stackit-compute-operator."
+                description="STACKIT Compute Engine virtual machines, provisioned and lifecycle-managed via stackit-compute-operator — general-purpose compute for workloads that don't run in Kubernetes."
                 lifecycle="ga"
                 basePath="/runtime/vm"
                 createPath="/runtime/vm/new"
@@ -148,7 +148,7 @@ export default function App() {
               <ResourceList
                 kind="postgresclusters"
                 title="PostgreSQL Databases"
-                description="Managed PostgreSQL databases running on CloudNativePG, via project-easter's PostgresCluster."
+                description="Managed PostgreSQL databases running on CloudNativePG, via project-easter's PostgresCluster — includes automated failover, backups, and a bootstrap database/owner on creation."
                 basePath="/database/postgresql"
                 createPath="/database/postgresql/new"
                 itemLabel="Database"
@@ -168,7 +168,7 @@ export default function App() {
               <ResourceList
                 kind="valkeyclusters"
                 title="Redis Caches"
-                description="Managed Redis-compatible caches running on Valkey, via project-easter's ValkeyCluster."
+                description="Managed Redis-compatible caches running on Valkey (the open-source Redis fork), via project-easter's ValkeyCluster — sharded and replicated for in-memory caching and fast key-value storage."
                 basePath="/database/redis"
                 createPath="/database/redis/new"
                 itemLabel="Cache"
@@ -188,7 +188,7 @@ export default function App() {
               <ResourceList
                 kind="mariadbclusters"
                 title="MariaDB Databases"
-                description="Managed MariaDB databases running on mariadb-operator, via project-easter's MariaDBCluster."
+                description="Managed MariaDB databases running on mariadb-operator, via project-easter's MariaDBCluster — replicated, MySQL-compatible relational databases with a bootstrap database on creation."
                 basePath="/database/mariadb"
                 createPath="/database/mariadb/new"
                 itemLabel="Database"
@@ -208,7 +208,7 @@ export default function App() {
               <ResourceList
                 kind="mongodbclusters"
                 title="MongoDB Databases"
-                description="Managed MongoDB databases running on Percona Server for MongoDB, via project-easter's MongoDBCluster."
+                description="Managed MongoDB databases running on Percona Server for MongoDB, via project-easter's MongoDBCluster — replicated document databases for applications that need flexible, schema-less storage."
                 basePath="/database/mongodb"
                 createPath="/database/mongodb/new"
                 itemLabel="Database"
@@ -241,7 +241,7 @@ export default function App() {
               <ResourceList
                 kind="lokiinstances"
                 title="Logging"
-                description="Log aggregation and storage backed by the Loki Operator, via project-easter's LokiInstance."
+                description="Log aggregation and storage backed by the Loki Operator, via project-easter's LokiInstance — pair it with a Log Shipper to collect a namespace's pod logs and query them from Grafana."
                 basePath="/observability/logging"
                 createPath="/observability/logging/new"
                 itemLabel="Logging Instance"
@@ -267,7 +267,7 @@ export default function App() {
               <ResourceList
                 kind="alloyinstances"
                 title="Log Shippers"
-                description="Ships a namespace's pod logs to a LokiInstance, via project-easter's AlloyInstance (Grafana Alloy)."
+                description="Ships a namespace's pod logs to a LokiInstance, via project-easter's AlloyInstance (Grafana Alloy) — multiple shippers can point at the same Logging instance."
                 basePath="/observability/logging/shippers"
                 createPath="/observability/logging/shippers/new"
                 itemLabel="Log Shipper"
@@ -290,7 +290,7 @@ export default function App() {
               <ResourceList
                 kind="rabbitmqclusters"
                 title="RabbitMQ Brokers"
-                description="Managed RabbitMQ message brokers running on the RabbitMQ Cluster Operator, via project-easter's RabbitMQCluster."
+                description="Managed RabbitMQ message brokers running on the RabbitMQ Cluster Operator, via project-easter's RabbitMQCluster — clustered queues for asynchronous messaging between services."
                 basePath="/messaging/rabbitmq"
                 createPath="/messaging/rabbitmq/new"
                 itemLabel="Broker"
@@ -310,7 +310,7 @@ export default function App() {
               <ResourceList
                 kind="kafkaclusters"
                 title="Kafka Brokers"
-                description="Managed Kafka brokers running on Strimzi, via project-easter's KafkaCluster."
+                description="Managed Kafka brokers running on Strimzi, via project-easter's KafkaCluster — clustered, replicated event streaming for high-throughput pub/sub workloads."
                 basePath="/messaging/kafka"
                 createPath="/messaging/kafka/new"
                 itemLabel="Broker"

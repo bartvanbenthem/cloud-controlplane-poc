@@ -100,8 +100,9 @@ export function VolumesList() {
           <LifecycleBadge status="preview" />
         </div>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        PersistentVolumeClaims across all namespaces.
+      <p className="page-description">
+        PersistentVolumeClaims across all namespaces — the durable storage backing your
+        databases, caches, and other stateful workloads.
       </p>
 
       {error && <div className="error-banner">{error}</div>}

@@ -10,8 +10,9 @@ export function SecurityHome() {
           <LifecycleBadge status="roadmap" />
         </div>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Secrets management and audit visibility for your workloads.
+      <p className="page-description">
+        Secrets management and audit visibility for your workloads. Both Vault and Audit Logs are
+        on the roadmap — no operator/CRD is wired up yet for this POC.
       </p>
 
       <div className="category-grid">

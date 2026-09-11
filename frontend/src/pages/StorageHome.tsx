@@ -10,8 +10,9 @@ export function StorageHome() {
           <LifecycleBadge status="preview" />
         </div>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Persistent volumes and object storage building blocks for your workloads.
+      <p className="page-description">
+        Persistent volumes and object storage building blocks for your workloads. Volumes is live
+        and backed by cluster PersistentVolumeClaims; Buckets is on the roadmap.
       </p>
 
       <div className="category-grid">

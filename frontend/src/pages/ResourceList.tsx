@@ -64,9 +64,7 @@ export function ResourceList({
           + New {itemLabel}
         </Link>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        {description}
-      </p>
+      <p className="page-description">{description}</p>
 
       {error && <div className="error-banner">{error}</div>}
 

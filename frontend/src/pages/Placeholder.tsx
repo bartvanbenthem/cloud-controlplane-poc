@@ -19,9 +19,7 @@ export function Placeholder({
           <LifecycleBadge status={lifecycle} />
         </div>
       </div>
-      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        {tagline}
-      </p>
+      <p className="page-description">{tagline}</p>
       <div className="panel">
         <p className="empty-state">{body}</p>
       </div>
