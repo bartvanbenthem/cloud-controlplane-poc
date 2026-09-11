@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { Volume } from "../types";
+import { LifecycleBadge } from "../components/LifecycleBadge";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -94,7 +95,10 @@ export function VolumesList() {
   return (
     <>
       <div className="page-header">
-        <h2>Volumes</h2>
+        <div className="page-title">
+          <h2>Volumes</h2>
+          <LifecycleBadge status="preview" />
+        </div>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
         PersistentVolumeClaims across all namespaces.

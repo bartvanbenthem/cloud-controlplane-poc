@@ -1,16 +1,23 @@
+import { LifecycleBadge, type ServiceLifecycle } from "../components/LifecycleBadge";
+
 export function Placeholder({
   title,
   tagline,
   body,
+  lifecycle = "roadmap",
 }: {
   title: string;
   tagline: string;
   body: string;
+  lifecycle?: ServiceLifecycle;
 }) {
   return (
     <>
       <div className="page-header">
-        <h2>{title}</h2>
+        <div className="page-title">
+          <h2>{title}</h2>
+          <LifecycleBadge status={lifecycle} />
+        </div>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
         {tagline}

@@ -121,6 +121,11 @@ a:hover {
   margin: 0;
   font-size: 20px;
 }
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
 .btn {
   display: inline-block;
@@ -197,6 +202,39 @@ tbody tr:hover {
   height: 7px;
   border-radius: 50%;
   background: currentColor;
+}
+
+.lifecycle-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+}
+.lifecycle-badge.lifecycle-preview {
+  color: var(--warn);
+  background: rgba(224, 168, 62, 0.12);
+  border-color: rgba(224, 168, 62, 0.35);
+}
+.lifecycle-badge.lifecycle-ga {
+  color: var(--ok);
+  background: rgba(62, 201, 122, 0.12);
+  border-color: rgba(62, 201, 122, 0.35);
+}
+.lifecycle-badge.lifecycle-roadmap {
+  color: var(--text-dim);
+  background: transparent;
+  border-color: var(--border);
+  border-style: dashed;
+}
+.lifecycle-badge.lifecycle-roadmap .dot {
+  background: transparent;
+  border: 1px solid currentColor;
 }
 
 .panel {

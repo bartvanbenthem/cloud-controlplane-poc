@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { LifecycleBadge } from "../components/LifecycleBadge";
 
 export function DatabaseHome() {
   const [postgresCount, setPostgresCount] = useState<number | null>(null);
@@ -28,7 +29,10 @@ export function DatabaseHome() {
   return (
     <>
       <div className="page-header">
-        <h2>Database</h2>
+        <div className="page-title">
+          <h2>Database</h2>
+          <LifecycleBadge status="preview" />
+        </div>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
         Managed database and cache building blocks, via{" "}

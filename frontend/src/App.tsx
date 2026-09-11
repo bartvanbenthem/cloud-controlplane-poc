@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar";
+import { ScrollToTop } from "./components/ScrollToTop";
 import { Dashboard } from "./pages/Dashboard";
 import { RuntimeHome } from "./pages/RuntimeHome";
 import { DatabaseHome } from "./pages/DatabaseHome";
@@ -87,6 +88,7 @@ function summarizeAlloy(r: CustomResource): string {
 export default function App() {
   return (
     <div className="layout">
+      <ScrollToTop />
       <Sidebar />
       <div className="main">
         <Routes>
@@ -101,6 +103,8 @@ export default function App() {
               <ResourceList
                 kind="clusters"
                 title="Kubernetes Clusters"
+                description="Managed Kubernetes clusters on STACKIT, provisioned via stackit-compute-operator."
+                lifecycle="ga"
                 basePath="/runtime/stackit"
                 createPath="/runtime/stackit/new"
                 itemLabel="Cluster"
@@ -120,6 +124,8 @@ export default function App() {
               <ResourceList
                 kind="servers"
                 title="Virtual Machines"
+                description="STACKIT Compute Engine virtual machines, provisioned via stackit-compute-operator."
+                lifecycle="ga"
                 basePath="/runtime/vm"
                 createPath="/runtime/vm/new"
                 itemLabel="Virtual Machine"
@@ -142,6 +148,7 @@ export default function App() {
               <ResourceList
                 kind="postgresclusters"
                 title="PostgreSQL Databases"
+                description="Managed PostgreSQL databases running on CloudNativePG, via project-easter's PostgresCluster."
                 basePath="/database/postgresql"
                 createPath="/database/postgresql/new"
                 itemLabel="Database"
@@ -161,6 +168,7 @@ export default function App() {
               <ResourceList
                 kind="valkeyclusters"
                 title="Redis Caches"
+                description="Managed Redis-compatible caches running on Valkey, via project-easter's ValkeyCluster."
                 basePath="/database/redis"
                 createPath="/database/redis/new"
                 itemLabel="Cache"
@@ -180,6 +188,7 @@ export default function App() {
               <ResourceList
                 kind="mariadbclusters"
                 title="MariaDB Databases"
+                description="Managed MariaDB databases running on mariadb-operator, via project-easter's MariaDBCluster."
                 basePath="/database/mariadb"
                 createPath="/database/mariadb/new"
                 itemLabel="Database"
@@ -199,6 +208,7 @@ export default function App() {
               <ResourceList
                 kind="mongodbclusters"
                 title="MongoDB Databases"
+                description="Managed MongoDB databases running on Percona Server for MongoDB, via project-easter's MongoDBCluster."
                 basePath="/database/mongodb"
                 createPath="/database/mongodb/new"
                 itemLabel="Database"
@@ -231,6 +241,7 @@ export default function App() {
               <ResourceList
                 kind="lokiinstances"
                 title="Logging"
+                description="Log aggregation and storage backed by the Loki Operator, via project-easter's LokiInstance."
                 basePath="/observability/logging"
                 createPath="/observability/logging/new"
                 itemLabel="Logging Instance"
@@ -256,6 +267,7 @@ export default function App() {
               <ResourceList
                 kind="alloyinstances"
                 title="Log Shippers"
+                description="Ships a namespace's pod logs to a LokiInstance, via project-easter's AlloyInstance (Grafana Alloy)."
                 basePath="/observability/logging/shippers"
                 createPath="/observability/logging/shippers/new"
                 itemLabel="Log Shipper"
@@ -278,6 +290,7 @@ export default function App() {
               <ResourceList
                 kind="rabbitmqclusters"
                 title="RabbitMQ Brokers"
+                description="Managed RabbitMQ message brokers running on the RabbitMQ Cluster Operator, via project-easter's RabbitMQCluster."
                 basePath="/messaging/rabbitmq"
                 createPath="/messaging/rabbitmq/new"
                 itemLabel="Broker"
@@ -297,6 +310,7 @@ export default function App() {
               <ResourceList
                 kind="kafkaclusters"
                 title="Kafka Brokers"
+                description="Managed Kafka brokers running on Strimzi, via project-easter's KafkaCluster."
                 basePath="/messaging/kafka"
                 createPath="/messaging/kafka/new"
                 itemLabel="Broker"

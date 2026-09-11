@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { LifecycleBadge } from "../components/LifecycleBadge";
 
 export function MessagingHome() {
   const [rabbitmqCount, setRabbitmqCount] = useState<number | null>(null);
@@ -19,7 +20,10 @@ export function MessagingHome() {
   return (
     <>
       <div className="page-header">
-        <h2>Messaging</h2>
+        <div className="page-title">
+          <h2>Messaging</h2>
+          <LifecycleBadge status="preview" />
+        </div>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
         Message queues and event streaming, via{" "}

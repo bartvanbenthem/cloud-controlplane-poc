@@ -1,13 +1,17 @@
 import { Link } from "react-router-dom";
+import { LifecycleBadge } from "../components/LifecycleBadge";
 
 export function SecurityHome() {
   return (
     <>
       <div className="page-header">
-        <h2>Security</h2>
+        <div className="page-title">
+          <h2>Security</h2>
+          <LifecycleBadge status="roadmap" />
+        </div>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Security and secrets building blocks.
+        Secrets management and audit visibility for your workloads.
       </p>
 
       <div className="category-grid">

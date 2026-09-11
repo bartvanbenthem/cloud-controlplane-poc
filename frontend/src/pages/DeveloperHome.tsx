@@ -1,13 +1,17 @@
 import { Link } from "react-router-dom";
+import { LifecycleBadge } from "../components/LifecycleBadge";
 
 export function DeveloperHome() {
   return (
     <>
       <div className="page-header">
-        <h2>Developer</h2>
+        <div className="page-title">
+          <h2>Developer</h2>
+          <LifecycleBadge status="roadmap" />
+        </div>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Developer tooling building blocks.
+        Continuous delivery and container image tooling for your workloads.
       </p>
 
       <div className="category-grid">

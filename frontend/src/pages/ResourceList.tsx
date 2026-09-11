@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { CustomResource, Kind } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
+import { LifecycleBadge, type ServiceLifecycle } from "../components/LifecycleBadge";
 
 const POLL_INTERVAL_MS = 5000;
 
 export function ResourceList({
   kind,
   title,
+  description,
+  lifecycle = "preview",
   basePath,
   createPath,
   itemLabel,
@@ -16,6 +19,9 @@ export function ResourceList({
 }: {
   kind: Kind;
   title: string;
+  /** Generic blurb about the service, shown under the title. */
+  description: string;
+  lifecycle?: ServiceLifecycle;
   basePath: string;
   createPath: string;
   /** Singular name of one item, e.g. "Cluster" — used for the "+ New …" button. */
@@ -50,11 +56,17 @@ export function ResourceList({
   return (
     <>
       <div className="page-header">
-        <h2>{title}</h2>
+        <div className="page-title">
+          <h2>{title}</h2>
+          <LifecycleBadge status={lifecycle} />
+        </div>
         <Link className="btn" to={createPath}>
           + New {itemLabel}
         </Link>
       </div>
+      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
+        {description}
+      </p>
 
       {error && <div className="error-banner">{error}</div>}
 

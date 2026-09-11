@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { CustomResource } from "../types";
 import { grafanaIngressUrl } from "../grafanaIngress";
+import { LifecycleBadge } from "../components/LifecycleBadge";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -113,11 +114,18 @@ export function MonitoringList() {
   return (
     <>
       <div className="page-header">
-        <h2>Monitoring Instances</h2>
+        <div className="page-title">
+          <h2>Monitoring Instances</h2>
+          <LifecycleBadge status="preview" />
+        </div>
         <Link className="btn" to="/observability/monitoring/new">
           + Install Monitoring
         </Link>
       </div>
+      <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
+        Grafana &amp; Prometheus, deployed and managed together as one monitoring stack via
+        project-easter's GrafanaInstance and PrometheusInstance.
+      </p>
 
       {error && <div className="error-banner">{error}</div>}
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { LifecycleBadge } from "../components/LifecycleBadge";
 
 export function ObservabilityHome() {
   const [monitoringCount, setMonitoringCount] = useState<number | null>(null);
@@ -25,7 +26,10 @@ export function ObservabilityHome() {
   return (
     <>
       <div className="page-header">
-        <h2>Observability</h2>
+        <div className="page-title">
+          <h2>Observability</h2>
+          <LifecycleBadge status="preview" />
+        </div>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
         Monitoring and observability tooling, via{" "}

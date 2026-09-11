@@ -1,13 +1,17 @@
 import { Link } from "react-router-dom";
+import { LifecycleBadge } from "../components/LifecycleBadge";
 
 export function StorageHome() {
   return (
     <>
       <div className="page-header">
-        <h2>Storage</h2>
+        <div className="page-title">
+          <h2>Storage</h2>
+          <LifecycleBadge status="preview" />
+        </div>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
-        Object storage building blocks.
+        Persistent volumes and object storage building blocks for your workloads.
       </p>
 
       <div className="category-grid">

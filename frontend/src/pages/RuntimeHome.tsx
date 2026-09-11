@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { LifecycleBadge } from "../components/LifecycleBadge";
 
 export function RuntimeHome() {
   const [clusterCount, setClusterCount] = useState<number | null>(null);
@@ -21,7 +22,10 @@ export function RuntimeHome() {
   return (
     <>
       <div className="page-header">
-        <h2>Runtime</h2>
+        <div className="page-title">
+          <h2>Runtime</h2>
+          <LifecycleBadge status="ga" />
+        </div>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
         Where your workloads actually run — one page per platform.
