@@ -181,7 +181,6 @@ export interface GrafanaCreateRequest {
   ingressHost?: string;
   ingressClassName?: string;
   ingressTlsSecretName?: string;
-  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export interface MariaDBCreateRequest {
@@ -264,7 +263,6 @@ export interface PrometheusCreateRequest {
   ingressHost?: string;
   ingressClassName?: string;
   ingressTlsSecretName?: string;
-  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export type LokiSize = "1x.demo" | "1x.pico" | "1x.extra-small" | "1x.small" | "1x.medium";

@@ -3,9 +3,12 @@ import { api } from "../api";
 import type { CustomResource, ServiceExposeInfo } from "../types";
 
 /** Shows the external address grafana-operator's own generated Service was
- * assigned, for a GrafanaInstance created with `expose.type: LoadBalancer`
- * (see MonitoringCreate's Expose fieldset). Renders nothing for any other
- * expose type — a ClusterIP/NodePort Service has no public IP to show. */
+ * assigned, for a GrafanaInstance with `spec.expose.type: LoadBalancer` set.
+ * The portal's own create form no longer offers this (see MonitoringCreate —
+ * Expose and Ingress front the same port, so setting both means a second,
+ * unwanted public IP), but existing instances created before that fix, or
+ * applied directly via kubectl, may still carry it. Renders nothing for any
+ * other expose type — a ClusterIP/NodePort Service has no public IP to show. */
 export function GrafanaPublicIpPanel({
   namespace,
   grafana,

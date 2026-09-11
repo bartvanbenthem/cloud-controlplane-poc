@@ -18,6 +18,13 @@ export function SecurityHome() {
             <span className="muted">Not integrated yet</span>
           </div>
         </Link>
+        <Link to="/security/audit-logs" className="category-card">
+          <h3>Audit Logs</h3>
+          <p className="muted">Who did what, when</p>
+          <div className="category-stats">
+            <span className="muted">Not integrated yet</span>
+          </div>
+        </Link>
       </div>
     </>
   );

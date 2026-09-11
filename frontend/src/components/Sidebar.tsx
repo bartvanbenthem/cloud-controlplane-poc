@@ -112,6 +112,9 @@ export function Sidebar() {
           <NavLink to="/security/vault" className={childClass}>
             Vault
           </NavLink>
+          <NavLink to="/security/audit-logs" className={childClass}>
+            Audit Logs
+          </NavLink>
         </NavGroup>
 
         <NavGroup to="/developer" label="Developer">
@@ -122,6 +125,13 @@ export function Sidebar() {
             Container Registry
           </NavLink>
         </NavGroup>
+
+        <NavLink to="/iam" className={linkClass}>
+          IAM
+        </NavLink>
+        <NavLink to="/support" className={linkClass}>
+          Support
+        </NavLink>
       </nav>
     </div>
   );

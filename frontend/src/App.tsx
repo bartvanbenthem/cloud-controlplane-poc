@@ -336,6 +336,16 @@ export default function App() {
               />
             }
           />
+          <Route
+            path="/security/audit-logs"
+            element={
+              <Placeholder
+                title="Audit Logs"
+                tagline="Who did what, when."
+                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              />
+            }
+          />
 
           {/* Developer */}
           <Route path="/developer" element={<DeveloperHome />} />
@@ -355,6 +365,30 @@ export default function App() {
               <Placeholder
                 title="Container Registry"
                 tagline="Container image storage."
+                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              />
+            }
+          />
+
+          {/* IAM */}
+          <Route
+            path="/iam"
+            element={
+              <Placeholder
+                title="IAM"
+                tagline="Identity and access management."
+                body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
+              />
+            }
+          />
+
+          {/* Support */}
+          <Route
+            path="/support"
+            element={
+              <Placeholder
+                title="Support"
+                tagline="Help and support requests."
                 body="Not integrated yet — this is a placeholder for the POC. No operator/CRD wired up."
               />
             }

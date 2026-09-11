@@ -30,14 +30,16 @@ type PrometheusRequest struct {
 	LimitsCPU      string `json:"limitsCpu,omitempty"`
 	LimitsMemory   string `json:"limitsMemory,omitempty"`
 
+	// Ingress is the only way to reach this Prometheus from outside the
+	// cluster (see GrafanaRequest's Ingress field for why -- Prometheus's
+	// own generated Service and PrometheusInstanceSpec.Expose front the
+	// exact same web UI/API port Ingress already routes to, so setting
+	// Expose too doesn't add a second way in, it flips that Service to
+	// type LoadBalancer, defaulting to a second, unwanted public IP
+	// alongside the Ingress).
 	IngressHost          string `json:"ingressHost,omitempty"`
 	IngressClassName     string `json:"ingressClassName,omitempty"`
 	IngressTLSSecretName string `json:"ingressTlsSecretName,omitempty"`
-
-	// ExposeType, when non-empty, controls the type of the ClusterIP
-	// Service this operator creates fronting Prometheus's web UI/API. One
-	// of "LoadBalancer"/"NodePort".
-	ExposeType string `json:"exposeType,omitempty"`
 }
 
 func (r *PrometheusRequest) applyDefaults() {
@@ -58,9 +60,6 @@ func (r PrometheusRequest) validate() error {
 	}
 	if r.IngressHost == "" && (r.IngressClassName != "" || r.IngressTLSSecretName != "") {
 		return fmt.Errorf("ingressHost is required when ingress class or TLS secret is set")
-	}
-	if r.ExposeType != "" && r.ExposeType != "LoadBalancer" && r.ExposeType != "NodePort" {
-		return fmt.Errorf("exposeType must be LoadBalancer or NodePort")
 	}
 	return nil
 }
@@ -89,9 +88,6 @@ func (r PrometheusRequest) toUnstructured() *unstructured.Unstructured {
 	}
 	if r.IngressHost != "" {
 		spec["ingress"] = buildIngress(r.IngressHost, r.IngressClassName, r.IngressTLSSecretName)
-	}
-	if r.ExposeType != "" {
-		spec["expose"] = buildExpose(r.ExposeType)
 	}
 
 	obj := &unstructured.Unstructured{}

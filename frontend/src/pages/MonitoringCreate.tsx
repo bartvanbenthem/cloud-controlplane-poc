@@ -8,20 +8,41 @@ import type { CustomResource, GrafanaCreateRequest, PrometheusCreateRequest } fr
  * and Prometheus Operator — in a single submit. Everything but name,
  * namespace, and an optional ingress host per component is left at the
  * operator's defaults. */
+/** Wildcard DNS zone every ingress host defaults into — see
+ * grafanaHostFor/prometheusHostFor. */
+const INGRESS_DOMAIN = "paas.cncp.nl";
+
+function grafanaHostFor(name: string): string {
+  return name ? `${name}.${INGRESS_DOMAIN}` : "";
+}
+
+function prometheusHostFor(name: string): string {
+  return name ? `${name}-prometheus.${INGRESS_DOMAIN}` : "";
+}
+
 export function MonitoringCreate() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [namespace, setNamespace] = useState("default");
   const [grafanaIngressHost, setGrafanaIngressHost] = useState("");
   const [prometheusIngressHost, setPrometheusIngressHost] = useState("");
-  const [grafanaExposeType, setGrafanaExposeType] = useState<"" | "LoadBalancer" | "NodePort">("");
-  const [prometheusExposeType, setPrometheusExposeType] = useState<"" | "LoadBalancer" | "NodePort">(
-    "",
-  );
+  // Once the user edits either host field directly, stop overwriting it as
+  // the name changes -- only the untouched, name-derived default keeps
+  // tracking. Prevents clobbering a deliberate override.
+  const [hostsTouched, setHostsTouched] = useState(false);
   const [lokiRef, setLokiRef] = useState("");
   const [lokiInstances, setLokiInstances] = useState<CustomResource[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Prestage both ingress hosts under the real wildcard zone as soon as a
+  // name is entered -- the previous "e.g. ...example.com" placeholder was
+  // too easy to copy verbatim into a host that has no DNS record at all.
+  useEffect(() => {
+    if (hostsTouched) return;
+    setGrafanaIngressHost(grafanaHostFor(name));
+    setPrometheusIngressHost(prometheusHostFor(name));
+  }, [name, hostsTouched]);
 
   // Loki instances to offer as a datasource are namespace-scoped, so
   // re-fetch whenever the target namespace changes, and drop any previously
@@ -54,14 +75,12 @@ export function MonitoringCreate() {
       replicas: 1,
       lokiRef: lokiRef || undefined,
       ingressHost: grafanaIngressHost,
-      exposeType: grafanaExposeType,
     };
     const prometheus: PrometheusCreateRequest = {
       name,
       namespace,
       replicas: 1,
       ingressHost: prometheusIngressHost,
-      exposeType: prometheusExposeType,
     };
 
     try {
@@ -139,59 +158,36 @@ export function MonitoringCreate() {
               <label>Grafana host</label>
               <input
                 type="text"
-                placeholder="e.g. grafana.example.com"
+                placeholder={`e.g. name.${INGRESS_DOMAIN}`}
                 value={grafanaIngressHost}
-                onChange={(e) => setGrafanaIngressHost(e.target.value)}
+                onChange={(e) => {
+                  setHostsTouched(true);
+                  setGrafanaIngressHost(e.target.value);
+                }}
               />
             </div>
             <div className="field">
               <label>Prometheus host</label>
               <input
                 type="text"
-                placeholder="e.g. prometheus.example.com"
+                placeholder={`e.g. name-prometheus.${INGRESS_DOMAIN}`}
                 value={prometheusIngressHost}
-                onChange={(e) => setPrometheusIngressHost(e.target.value)}
+                onChange={(e) => {
+                  setHostsTouched(true);
+                  setPrometheusIngressHost(e.target.value);
+                }}
               />
             </div>
           </div>
           <p className="hint">
-            Leave either empty to skip creating an Ingress for it. The portal has no built-in
-            proxy for either — without a Grafana host, this instance won't be reachable (or
-            embeddable in other resources' dashboards) through the portal at all.
-          </p>
-        </fieldset>
-
-        <fieldset>
-          <legend>Expose (optional)</legend>
-          <div className="form-grid">
-            <div className="field">
-              <label>Grafana Service</label>
-              <select
-                value={grafanaExposeType}
-                onChange={(e) => setGrafanaExposeType(e.target.value as typeof grafanaExposeType)}
-              >
-                <option value="">Cluster-internal only</option>
-                <option value="LoadBalancer">LoadBalancer</option>
-                <option value="NodePort">NodePort</option>
-              </select>
-            </div>
-            <div className="field">
-              <label>Prometheus Service</label>
-              <select
-                value={prometheusExposeType}
-                onChange={(e) =>
-                  setPrometheusExposeType(e.target.value as typeof prometheusExposeType)
-                }
-              >
-                <option value="">Cluster-internal only</option>
-                <option value="LoadBalancer">LoadBalancer</option>
-                <option value="NodePort">NodePort</option>
-              </select>
-            </div>
-          </div>
-          <p className="hint">
-            Controls the type of each instance's own generated Service — independent of, and in
-            addition to, the Ingress above.
+            Prestaged under the <code>{INGRESS_DOMAIN}</code> wildcard zone, which resolves any
+            subdomain without a separate DNS record — edit if you want a different host, or clear
+            either to keep it cluster-internal only, with no public IP. Setting a host is the only
+            way to make it reachable from outside the cluster; the portal has no built-in proxy
+            for either, and deliberately doesn't offer a standalone LoadBalancer/NodePort Service
+            option here, since that would front the exact same port as the Ingress and default to
+            a second, unwanted public IP alongside it. Without a Grafana host, this instance also
+            won't be embeddable in other resources' dashboards through the portal.
           </p>
         </fieldset>
 

@@ -29,13 +29,20 @@ type GrafanaRequest struct {
 	// necessarily exist or share that name, so the caller passes it explicitly.
 	LokiRef string `json:"lokiRef,omitempty"`
 
+	// Ingress is the only way to reach this Grafana from outside the
+	// cluster: unlike PostgresCluster/MariaDBCluster/ValkeyCluster there's
+	// no separate spec.expose here. Grafana's own generated Service and
+	// GrafanaInstanceSpec.Expose both front the exact same HTTP port
+	// Ingress already routes to (unlike RabbitMQCluster, whose Ingress and
+	// Expose front two different ports -- the HTTP management UI vs. raw
+	// AMQP). Setting Expose there too doesn't add a second way in, it
+	// flips the same Service to type LoadBalancer, defaulting to a second,
+	// unwanted public IP alongside the Ingress. So the portal exposes only
+	// two states for Grafana: cluster-internal (no ingress) or reachable
+	// via Ingress -- never a raw LoadBalancer/NodePort Service.
 	IngressHost          string `json:"ingressHost,omitempty"`
 	IngressClassName     string `json:"ingressClassName,omitempty"`
 	IngressTLSSecretName string `json:"ingressTlsSecretName,omitempty"`
-
-	// ExposeType, when non-empty, controls the type of the underlying
-	// Grafana's own generated Service. One of "LoadBalancer"/"NodePort".
-	ExposeType string `json:"exposeType,omitempty"`
 }
 
 func (r *GrafanaRequest) applyDefaults() {
@@ -56,9 +63,6 @@ func (r GrafanaRequest) validate() error {
 	}
 	if r.IngressHost == "" && (r.IngressClassName != "" || r.IngressTLSSecretName != "") {
 		return fmt.Errorf("ingressHost is required when ingress class or TLS secret is set")
-	}
-	if r.ExposeType != "" && r.ExposeType != "LoadBalancer" && r.ExposeType != "NodePort" {
-		return fmt.Errorf("exposeType must be LoadBalancer or NodePort")
 	}
 	return nil
 }
@@ -90,9 +94,6 @@ func (r GrafanaRequest) toUnstructured() *unstructured.Unstructured {
 	}
 	if r.IngressHost != "" {
 		spec["ingress"] = buildIngress(r.IngressHost, r.IngressClassName, r.IngressTLSSecretName)
-	}
-	if r.ExposeType != "" {
-		spec["expose"] = buildExpose(r.ExposeType)
 	}
 
 	obj := &unstructured.Unstructured{}
