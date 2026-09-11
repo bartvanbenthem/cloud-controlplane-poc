@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { CustomResource, Kind } from "../types";
@@ -16,6 +16,7 @@ export function ResourceList({
   createPath,
   itemLabel,
   summarize,
+  extraColumns = [],
 }: {
   kind: Kind;
   title: string;
@@ -28,6 +29,9 @@ export function ResourceList({
   itemLabel: string;
   /** Renders the compact spec summary shown in the table's Summary column. */
   summarize: (r: CustomResource) => string;
+  /** Extra table columns rendered after Summary, e.g. a related resource's
+   * count — for data this list's own `kind` doesn't carry. */
+  extraColumns?: { header: string; render: (r: CustomResource) => ReactNode }[];
 }) {
   const [items, setItems] = useState<CustomResource[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +85,9 @@ export function ResourceList({
               <th>Name</th>
               <th>Namespace</th>
               <th>Summary</th>
+              {extraColumns.map((c) => (
+                <th key={c.header}>{c.header}</th>
+              ))}
               <th>Status</th>
               <th>Age</th>
             </tr>
@@ -95,6 +102,11 @@ export function ResourceList({
                 </td>
                 <td className="muted">{r.metadata.namespace}</td>
                 <td className="muted">{summarize(r)}</td>
+                {extraColumns.map((c) => (
+                  <td key={c.header} className="muted">
+                    {c.render(r)}
+                  </td>
+                ))}
                 <td>
                   <StatusBadge resource={r} />
                 </td>

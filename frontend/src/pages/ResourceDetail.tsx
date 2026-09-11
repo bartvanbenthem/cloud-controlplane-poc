@@ -5,6 +5,7 @@ import type { CustomResource, Kind } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
 import { CredentialsPanel, hasCredentials } from "../components/CredentialsPanel";
 import { GrafanaDashboardEmbed } from "../components/GrafanaDashboardEmbed";
+import { LogCollectorsPanel } from "../components/LogCollectorsPanel";
 
 export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: string }) {
   const { namespace = "", name = "" } = useParams();
@@ -104,6 +105,8 @@ export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: strin
       )}
 
       <GrafanaDashboardEmbed kind={kind} namespace={resource.metadata.namespace} name={resource.metadata.name} resource={resource} />
+
+      <LogCollectorsPanel kind={kind} namespace={resource.metadata.namespace} name={resource.metadata.name} />
 
       <div className="panel">
         <h3>Spec</h3>

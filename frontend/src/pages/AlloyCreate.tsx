@@ -64,7 +64,7 @@ export function AlloyCreate() {
   return (
     <>
       <div className="page-header">
-        <h2>New Log Shipper</h2>
+        <h2>New Log Collector</h2>
       </div>
       <p className="muted" style={{ marginTop: -12, marginBottom: 20 }}>
         Creates an <code>AlloyInstance</code>, project-easter's thin front
@@ -146,7 +146,7 @@ export function AlloyCreate() {
 
         <div className="actions-row">
           <button className="btn" type="submit" disabled={submitting}>
-            {submitting ? "Creating…" : "Create Log Shipper"}
+            {submitting ? "Creating…" : "Create Log Collector"}
           </button>
         </div>
       </form>

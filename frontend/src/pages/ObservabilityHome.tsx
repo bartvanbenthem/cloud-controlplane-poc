@@ -33,7 +33,7 @@ export function ObservabilityHome() {
       </div>
       <p className="page-description">
         Metrics, dashboards, and log aggregation for your workloads, Monitoring gives you
-        Grafana &amp; Prometheus, while Logging and Log Shippers collect and query pod logs.
+        Grafana &amp; Prometheus, while Logging and Log Collectors collect and query pod logs.
         Fronted by{" "}
         <a
           href="https://github.com/bartvanbenthem/project-easter"
@@ -69,7 +69,7 @@ export function ObservabilityHome() {
         </Link>
 
         <Link to="/observability/logging/shippers" className="category-card">
-          <h3>Log Shippers</h3>
+          <h3>Log Collectors</h3>
           <p className="muted">
             Grafana Alloy, via project-easter's AlloyInstance — ships a namespace's pod logs to a
             LokiInstance

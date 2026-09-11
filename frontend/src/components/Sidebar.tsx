@@ -86,7 +86,7 @@ export function Sidebar() {
             Logging
           </NavLink>
           <NavLink to="/observability/logging/shippers" className={childClass}>
-            Log Shippers
+            Log Collectors
           </NavLink>
         </NavGroup>
 

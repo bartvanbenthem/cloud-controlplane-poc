@@ -12,6 +12,7 @@ import { SecurityHome } from "./pages/SecurityHome";
 import { DeveloperHome } from "./pages/DeveloperHome";
 import { Placeholder } from "./pages/Placeholder";
 import { ResourceList } from "./pages/ResourceList";
+import { LoggingList } from "./pages/LoggingList";
 import { ResourceDetail } from "./pages/ResourceDetail";
 import { ClusterCreate } from "./pages/ClusterCreate";
 import { ServerCreate } from "./pages/ServerCreate";
@@ -71,11 +72,6 @@ function summarizeRabbitMQ(r: CustomResource): string {
 function summarizeKafka(r: CustomResource): string {
   const spec = r.spec as { replicas?: number; version?: string };
   return [`${spec.replicas ?? "?"} replica(s)`, spec.version].filter(Boolean).join(" · ");
-}
-
-function summarizeLoki(r: CustomResource): string {
-  const spec = r.spec as { size?: string; storageClassName?: string };
-  return [spec.size, spec.storageClassName && `sc ${spec.storageClassName}`].filter(Boolean).join(" · ");
 }
 
 function summarizeAlloy(r: CustomResource): string {
@@ -234,28 +230,16 @@ export default function App() {
           <Route path="/observability/monitoring/:namespace/:name" element={<MonitoringDetail />} />
 
           {/* Logging — project-easter's LokiInstance, a thin front for a
-              Loki Operator LokiStack. */}
-          <Route
-            path="/observability/logging"
-            element={
-              <ResourceList
-                kind="lokiinstances"
-                title="Logging"
-                description="Log aggregation and storage backed by the Loki Operator, via project-easter's LokiInstance, pair it with a Log Shipper to collect a namespace's pod logs and query them from Grafana."
-                basePath="/observability/logging"
-                createPath="/observability/logging/new"
-                itemLabel="Logging Instance"
-                summarize={summarizeLoki}
-              />
-            }
-          />
+              Loki Operator LokiStack. Uses LoggingList (not the generic
+              ResourceList) to show each instance's Log Collector count. */}
+          <Route path="/observability/logging" element={<LoggingList />} />
           <Route path="/observability/logging/new" element={<LoggingCreate />} />
           <Route
             path="/observability/logging/:namespace/:name"
             element={<ResourceDetail kind="lokiinstances" listPath="/observability/logging" />}
           />
 
-          {/* Log shippers — project-easter's AlloyInstance, a thin front
+          {/* Log collectors — project-easter's AlloyInstance, a thin front
               for the Alloy Operator's Alloy. Ships a namespace's pod logs
               to a LokiInstance; listed separately from Logging itself since
               it's a many-to-one relationship (multiple AlloyInstances can
@@ -266,11 +250,11 @@ export default function App() {
             element={
               <ResourceList
                 kind="alloyinstances"
-                title="Log Shippers"
-                description="Ships a namespace's pod logs to a LokiInstance, via project-easter's AlloyInstance (Grafana Alloy), multiple shippers can point at the same Logging instance."
+                title="Log Collectors"
+                description="Ships a namespace's pod logs to a LokiInstance, via project-easter's AlloyInstance (Grafana Alloy), multiple collectors can point at the same Logging instance."
                 basePath="/observability/logging/shippers"
                 createPath="/observability/logging/shippers/new"
-                itemLabel="Log Shipper"
+                itemLabel="Log Collector"
                 summarize={summarizeAlloy}
               />
             }
