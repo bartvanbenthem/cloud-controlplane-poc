@@ -101,7 +101,7 @@ export function VolumesList() {
         </div>
       </div>
       <p className="page-description">
-        PersistentVolumeClaims across all namespaces — the durable storage backing your
+        PersistentVolumeClaims across all namespaces, the durable storage backing your
         databases, caches, and other stateful workloads.
       </p>
 

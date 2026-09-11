@@ -26,7 +26,7 @@ export function MessagingHome() {
         </div>
       </div>
       <p className="page-description">
-        Message queues and event streaming for decoupling services — RabbitMQ for
+        Message queues and event streaming for decoupling services, RabbitMQ for
         request/task-style queuing, Kafka for high-throughput event streams. Fronted by{" "}
         <a
           href="https://github.com/bartvanbenthem/project-easter"

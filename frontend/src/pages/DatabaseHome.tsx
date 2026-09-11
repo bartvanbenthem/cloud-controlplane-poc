@@ -36,7 +36,7 @@ export function DatabaseHome() {
       </div>
       <p className="page-description">
         Managed, operator-backed databases and caches for your workloads. Pick a technology below
-        to provision an instance — all fronted by{" "}
+        to provision an instance, all fronted by{" "}
         <a
           href="https://github.com/bartvanbenthem/project-easter"
           target="_blank"

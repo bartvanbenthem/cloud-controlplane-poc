@@ -3,15 +3,15 @@ export type ServiceLifecycle = "preview" | "ga" | "roadmap";
 const COPY: Record<ServiceLifecycle, { label: string; title: string }> = {
   preview: {
     label: "Preview",
-    title: "Preview — still evolving. APIs, defaults, and behavior may change without notice.",
+    title: "Preview, still evolving. APIs, defaults, and behavior may change without notice.",
   },
   ga: {
     label: "GA",
-    title: "Generally available — stable and supported for production use.",
+    title: "Generally available, stable and supported for production use.",
   },
   roadmap: {
     label: "Roadmap",
-    title: "Roadmap — not integrated yet. No operator/CRD wired up.",
+    title: "Roadmap, not integrated yet. No operator/CRD wired up.",
   },
 };
 

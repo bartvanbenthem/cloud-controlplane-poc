@@ -32,7 +32,7 @@ export function ObservabilityHome() {
         </div>
       </div>
       <p className="page-description">
-        Metrics, dashboards, and log aggregation for your workloads — Monitoring gives you
+        Metrics, dashboards, and log aggregation for your workloads, Monitoring gives you
         Grafana &amp; Prometheus, while Logging and Log Shippers collect and query pod logs.
         Fronted by{" "}
         <a

@@ -12,7 +12,7 @@ export function SecurityHome() {
       </div>
       <p className="page-description">
         Secrets management and audit visibility for your workloads. Both Vault and Audit Logs are
-        on the roadmap — no operator/CRD is wired up yet for this POC.
+        on the roadmap, no operator/CRD is wired up yet for this POC.
       </p>
 
       <div className="category-grid">

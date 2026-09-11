@@ -124,7 +124,7 @@ export function MonitoringList() {
       </div>
       <p className="page-description">
         Grafana &amp; Prometheus, deployed and managed together as one monitoring stack via
-        project-easter's GrafanaInstance and PrometheusInstance — Prometheus scrapes metrics,
+        project-easter's GrafanaInstance and PrometheusInstance, Prometheus scrapes metrics,
         Grafana visualizes them, and the two are created, viewed, and deleted as a pair.
       </p>
 
