@@ -20,6 +20,7 @@ import (
 type ServiceExposeInfo struct {
 	Type      string   `json:"type"`
 	Addresses []string `json:"addresses,omitempty"`
+	Port      int32    `json:"port,omitempty"`
 	Pending   bool     `json:"pending"`
 }
 
@@ -116,6 +117,7 @@ func (s *Server) mongodbServiceExpose(ctx context.Context, ns, name string) (Ser
 		}
 		member := serviceExposeInfo(svc)
 		info.Type = member.Type
+		info.Port = member.Port
 		info.Addresses = append(info.Addresses, member.Addresses...)
 	}
 	info.Pending = exposeType == string(corev1.ServiceTypeLoadBalancer) && len(info.Addresses) == 0
@@ -123,9 +125,15 @@ func (s *Server) mongodbServiceExpose(ctx context.Context, ns, name string) (Ser
 }
 
 // serviceExposeInfo extracts a ServiceExposeInfo from one live Service --
-// shared by every "expose" kind, single- and multi-Service alike.
+// shared by every "expose" kind, single- and multi-Service alike. Port is
+// the Service's own first port (every "expose" Service here fronts exactly
+// one port -- see each kind's doc comment), used to build a full connection
+// string rather than just an address.
 func serviceExposeInfo(svc *corev1.Service) ServiceExposeInfo {
 	info := ServiceExposeInfo{Type: string(svc.Spec.Type)}
+	if len(svc.Spec.Ports) > 0 {
+		info.Port = svc.Spec.Ports[0].Port
+	}
 	if svc.Spec.Type != corev1.ServiceTypeLoadBalancer {
 		return info
 	}

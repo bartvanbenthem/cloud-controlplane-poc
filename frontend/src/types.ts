@@ -95,6 +95,7 @@ export interface CredentialsResponse {
 export interface ServiceExposeInfo {
   type: string;
   addresses?: string[];
+  port?: number;
   pending: boolean;
 }
 

@@ -3,7 +3,11 @@ package api
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -109,6 +113,121 @@ func secretField(secret *corev1.Secret, key, label string, sensitive bool) (Cred
 	return CredentialField{Label: label, Value: string(v), Sensitive: sensitive}, true
 }
 
+// rewriteExternalHost swaps CNPG's/the RabbitMQ Cluster Operator's own
+// internal Service DNS name -- the "Host" (and, for Postgres, "Connection
+// URI") value their Secret carries, only resolvable from pods in this same
+// cluster -- for the external LoadBalancer address. Every consumer of these
+// credentials is an app on a different Kubernetes cluster (see buildExpose's
+// doc comment), so the internal hostname the Secret carries is never
+// actually reachable by whoever reads these credentials off the portal. A
+// no-op when the LoadBalancer hasn't been assigned an address yet (still
+// provisioning) or svcName's Service can't be read -- the internal host
+// stays as the best available fallback rather than the field disappearing.
+func (s *Server) rewriteExternalHost(ctx context.Context, ns, svcName string, fields []CredentialField) {
+	info, err := s.namedServiceExpose(ctx, ns, svcName)
+	if err != nil || len(info.Addresses) == 0 {
+		return
+	}
+	external := info.Addresses[0]
+
+	for i, f := range fields {
+		switch f.Label {
+		case "Host":
+			fields[i].Value = external
+		case "Connection URI":
+			fields[i].Value = rewriteURIHost(f.Value, external)
+		}
+	}
+}
+
+// rewriteURIHost replaces the host in a "scheme://user:pass@host:port/db"
+// connection URI with external, keeping the port. CNPG's own uri Secret key
+// embeds the namespace-qualified form of its host key ("<cluster>-rw.
+// <namespace>", vs. the host key's own bare "<cluster>-rw"), so a plain
+// substring replace of the host key's value would only swap the unqualified
+// prefix and leave a stray ".<namespace>" glued onto the external address --
+// this splices out the whole userinfo-to-port span instead. The rightmost
+// "@" is used since a generated password can itself contain "@", which a
+// hostname never does; uri is returned unchanged if it doesn't look like a
+// "user@host[:port]" URI.
+func rewriteURIHost(uri, external string) string {
+	at := strings.LastIndex(uri, "@")
+	if at < 0 {
+		return uri
+	}
+	rest := uri[at+1:]
+	end := strings.IndexAny(rest, ":/")
+	if end < 0 {
+		end = len(rest)
+	}
+	return uri[:at+1] + external + rest[end:]
+}
+
+// connectionFields builds "Host"/"Port"/"Connection URI" CredentialFields
+// from a resource's own external Service, for kinds whose vendor Secret
+// carries neither host nor a URI at all (MariaDBCluster) -- unlike CNPG's/
+// the RabbitMQ Cluster Operator's own Secrets, which already do (see
+// rewriteExternalHost). scheme/user/password/dbPath build the URI the way
+// the vendor's own client tooling expects one; dbPath may be empty. The URI
+// is built via net/url rather than raw string formatting so a generated
+// password containing URI-significant characters (mariadb-operator's own
+// passwords can contain "/", which breaks the authority section of a
+// hand-formatted URI, confirmed against a live generated password) comes
+// out correctly percent-encoded. Returns nil when the LoadBalancer hasn't
+// been assigned an address yet, so the caller's fields are left with just
+// what the Secret itself carried.
+func connectionFields(info ServiceExposeInfo, scheme, user, password, dbPath string) []CredentialField {
+	if len(info.Addresses) == 0 {
+		return nil
+	}
+	host := info.Addresses[0]
+	fields := []CredentialField{{Label: "Host", Value: host}}
+	hostport := host
+	if info.Port != 0 {
+		fields = append(fields, CredentialField{Label: "Port", Value: strconv.Itoa(int(info.Port))})
+		hostport = net.JoinHostPort(host, strconv.Itoa(int(info.Port)))
+	}
+	uri := url.URL{Scheme: scheme, User: url.UserPassword(user, password), Host: hostport, Path: "/" + dbPath}
+	fields = append(fields, CredentialField{Label: "Connection URI", Value: uri.String(), Sensitive: true})
+	return fields
+}
+
+// mongoConnectionFields builds "Host"/"Port"/"Connection URI" fields for a
+// MongoDBCluster from its per-replica-set-member external Services (see
+// mongodbServiceExpose) -- a proper MongoDB replica-set connection string
+// names every member rather than just one, so a driver can find the primary
+// and fail over to a secondary itself. "rs0" mirrors project-easter's own
+// internal/psmdb's fixed replset name (MongoDBClusterSpec models exactly
+// one, non-sharded replica set -- see mongodbCredentials's doc comment). See
+// connectionFields's doc comment for why net/url builds the URI rather than
+// raw string formatting.
+func mongoConnectionFields(info ServiceExposeInfo, user, password string) []CredentialField {
+	if len(info.Addresses) == 0 {
+		return nil
+	}
+	hostports := make([]string, len(info.Addresses))
+	for i, addr := range info.Addresses {
+		if info.Port != 0 {
+			hostports[i] = net.JoinHostPort(addr, strconv.Itoa(int(info.Port)))
+		} else {
+			hostports[i] = addr
+		}
+	}
+	fields := []CredentialField{{Label: "Host", Value: strings.Join(info.Addresses, ", ")}}
+	if info.Port != 0 {
+		fields = append(fields, CredentialField{Label: "Port", Value: strconv.Itoa(int(info.Port))})
+	}
+	uri := url.URL{
+		Scheme:   "mongodb",
+		User:     url.UserPassword(user, password),
+		Host:     strings.Join(hostports, ","),
+		Path:     "/admin",
+		RawQuery: "replicaSet=rs0&authSource=admin",
+	}
+	fields = append(fields, CredentialField{Label: "Connection URI", Value: uri.String(), Sensitive: true})
+	return fields
+}
+
 // postgresCredentials reads CNPG's auto-generated `<name>-app` Secret.
 // PostgresClusterSpec's database.owner is passed as
 // bootstrap.initdb.owner with no explicit secret ref, which is CNPG's own
@@ -138,6 +257,7 @@ func (s *Server) postgresCredentials(ctx context.Context, ns, name string) (Cred
 			fields = append(fields, cf)
 		}
 	}
+	s.rewriteExternalHost(ctx, ns, name+"-external", fields)
 	return CredentialsResponse{Sets: []CredentialSet{{Label: "App user", Fields: fields}}}, nil
 }
 
@@ -151,13 +271,21 @@ func (s *Server) postgresCredentials(ctx context.Context, ns, name string) (Cred
 // see project-easter's internal/mariadb appSecretSuffix/rootSecretSuffix.
 // Only the password lives in either Secret; the app username is the CR's
 // own spec.database.owner (mariadb-operator has no separate username key),
-// so the CR is fetched too.
+// so the CR is fetched too. Host/Port/Connection URI come from neither
+// Secret nor the CR -- mariadb-operator's own Secrets carry only the
+// password -- so they're built from the Service's own external address (see
+// connectionFields).
 func (s *Server) mariadbCredentials(ctx context.Context, ns, name string) (CredentialsResponse, error) {
 	obj, err := s.clients.Dynamic.Resource(KindMariaDB.gvr()).Namespace(ns).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return CredentialsResponse{}, err
 	}
 	owner, _, _ := unstructured.NestedString(obj.Object, "spec", "database", "owner")
+	dbName, _, _ := unstructured.NestedString(obj.Object, "spec", "database", "name")
+	// Ignored on error: connectionFields degrades gracefully to nil (no
+	// Host/Port/Connection URI fields) on a zero-value ServiceExposeInfo,
+	// same as the LoadBalancer-still-provisioning case.
+	info, _ := s.namedServiceExpose(ctx, ns, name)
 
 	var sets []CredentialSet
 	anyFound := false
@@ -167,9 +295,13 @@ func (s *Server) mariadbCredentials(ctx context.Context, ns, name string) (Crede
 	} else if found {
 		anyFound = true
 		fields := []CredentialField{{Label: "Username", Value: owner, Sensitive: false}}
+		password := ""
 		if cf, ok := secretField(secret, "password", "Password", true); ok {
 			fields = append(fields, cf)
+			password = cf.Value
 		}
+		fields = append(fields, CredentialField{Label: "Database", Value: dbName, Sensitive: false})
+		fields = append(fields, connectionFields(info, "mysql", owner, password, dbName)...)
 		sets = append(sets, CredentialSet{Label: "App user", Fields: fields})
 	}
 
@@ -178,9 +310,12 @@ func (s *Server) mariadbCredentials(ctx context.Context, ns, name string) (Crede
 	} else if found {
 		anyFound = true
 		fields := []CredentialField{{Label: "Username", Value: "root", Sensitive: false}}
+		password := ""
 		if cf, ok := secretField(secret, "password", "Password", true); ok {
 			fields = append(fields, cf)
+			password = cf.Value
 		}
+		fields = append(fields, connectionFields(info, "mysql", "root", password, "")...)
 		sets = append(sets, CredentialSet{Label: "Root user", Fields: fields})
 	}
 
@@ -193,7 +328,9 @@ func (s *Server) mariadbCredentials(ctx context.Context, ns, name string) (Crede
 // several system users inside (see internal/psmdb/psmdb.go's
 // secretsUsersSuffix in project-easter). This surfaces the userAdmin one
 // (full user/role management), since Mongo has no separate app-user concept
-// the way Postgres/MariaDB have via database.owner.
+// the way Postgres/MariaDB have via database.owner. Host/Port/Connection URI
+// come from the per-member external Services instead (see
+// mongoConnectionFields) -- the Secret carries neither.
 func (s *Server) mongodbCredentials(ctx context.Context, ns, name string) (CredentialsResponse, error) {
 	secret, found, err := s.getSecret(ctx, ns, name+"-psmdb-secrets")
 	if err != nil || !found {
@@ -201,6 +338,7 @@ func (s *Server) mongodbCredentials(ctx context.Context, ns, name string) (Crede
 	}
 
 	var fields []CredentialField
+	var user, password string
 	for _, f := range []struct {
 		key, label string
 		sensitive  bool
@@ -210,7 +348,17 @@ func (s *Server) mongodbCredentials(ctx context.Context, ns, name string) (Crede
 	} {
 		if cf, ok := secretField(secret, f.key, f.label, f.sensitive); ok {
 			fields = append(fields, cf)
+			if f.label == "Username" {
+				user = cf.Value
+			} else {
+				password = cf.Value
+			}
 		}
+	}
+	// Ignored on error: mongoConnectionFields degrades gracefully to nil on
+	// a zero-value ServiceExposeInfo, same as no member Service existing yet.
+	if info, err := s.mongodbServiceExpose(ctx, ns, name); err == nil {
+		fields = append(fields, mongoConnectionFields(info, user, password)...)
 	}
 	return CredentialsResponse{Sets: []CredentialSet{{Label: "User admin", Fields: fields}}}, nil
 }
@@ -239,6 +387,7 @@ func (s *Server) rabbitmqCredentials(ctx context.Context, ns, name string) (Cred
 			fields = append(fields, cf)
 		}
 	}
+	s.rewriteExternalHost(ctx, ns, name, fields)
 	return CredentialsResponse{Sets: []CredentialSet{{Label: "Default user", Fields: fields}}}, nil
 }
 
