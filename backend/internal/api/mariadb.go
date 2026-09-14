@@ -29,11 +29,6 @@ type MariaDBRequest struct {
 	LimitsMemory   string `json:"limitsMemory,omitempty"`
 
 	EnablePodMonitor bool `json:"enablePodMonitor"`
-
-	// ExposeType, when non-empty, changes the type of the underlying
-	// MariaDB's own primary Service so it's reachable outside the cluster.
-	// One of "LoadBalancer"/"NodePort".
-	ExposeType string `json:"exposeType,omitempty"`
 }
 
 func (r *MariaDBRequest) applyDefaults() {
@@ -67,9 +62,6 @@ func (r MariaDBRequest) validate() error {
 	if err := requireNonEmpty("databaseOwner", r.DatabaseOwner); err != nil {
 		return err
 	}
-	if r.ExposeType != "" && r.ExposeType != "LoadBalancer" && r.ExposeType != "NodePort" {
-		return fmt.Errorf("exposeType must be LoadBalancer or NodePort")
-	}
 	return nil
 }
 
@@ -96,9 +88,7 @@ func (r MariaDBRequest) toUnstructured() *unstructured.Unstructured {
 	spec["monitoring"] = map[string]interface{}{
 		"enablePodMonitor": r.EnablePodMonitor,
 	}
-	if r.ExposeType != "" {
-		spec["expose"] = buildExpose(r.ExposeType)
-	}
+	spec["expose"] = buildExpose()
 
 	obj := &unstructured.Unstructured{}
 	obj.SetUnstructuredContent(map[string]interface{}{

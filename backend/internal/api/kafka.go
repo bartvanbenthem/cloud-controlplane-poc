@@ -28,10 +28,6 @@ type KafkaRequest struct {
 	LimitsMemory   string `json:"limitsMemory,omitempty"`
 
 	EnablePodMonitor bool `json:"enablePodMonitor"`
-
-	// ExposeType, when non-empty, adds a TLS "external" listener alongside
-	// the cluster-internal "plain" one. One of "LoadBalancer"/"NodePort".
-	ExposeType string `json:"exposeType,omitempty"`
 }
 
 func (r *KafkaRequest) applyDefaults() {
@@ -56,9 +52,6 @@ func (r KafkaRequest) validate() error {
 	if err := requireNonEmpty("storageSize", r.StorageSize); err != nil {
 		return err
 	}
-	if r.ExposeType != "" && r.ExposeType != "LoadBalancer" && r.ExposeType != "NodePort" {
-		return fmt.Errorf("exposeType must be LoadBalancer or NodePort")
-	}
 	return nil
 }
 
@@ -81,9 +74,7 @@ func (r KafkaRequest) toUnstructured() *unstructured.Unstructured {
 	spec["monitoring"] = map[string]interface{}{
 		"enablePodMonitor": r.EnablePodMonitor,
 	}
-	if r.ExposeType != "" {
-		spec["expose"] = buildExpose(r.ExposeType)
-	}
+	spec["expose"] = buildExpose()
 
 	obj := &unstructured.Unstructured{}
 	obj.SetUnstructuredContent(map[string]interface{}{

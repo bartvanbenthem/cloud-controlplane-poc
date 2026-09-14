@@ -15,7 +15,6 @@ const initial: KafkaCreateRequest = {
   limitsCpu: "",
   limitsMemory: "",
   enablePodMonitor: true,
-  exposeType: "",
 };
 
 export function KafkaCreate() {
@@ -175,20 +174,8 @@ export function KafkaCreate() {
         </fieldset>
 
         <fieldset>
-          <legend>Networking &amp; monitoring (optional)</legend>
+          <legend>Monitoring (optional)</legend>
           <div className="form-grid">
-            <div className="field">
-              <label>Expose external listener</label>
-              <select
-                value={form.exposeType}
-                onChange={(e) => set("exposeType", e.target.value as typeof form.exposeType)}
-              >
-                <option value="">Cluster-internal only</option>
-                <option value="LoadBalancer">LoadBalancer</option>
-                <option value="NodePort">NodePort</option>
-              </select>
-              <p className="hint">Adds a TLS "external" listener alongside the internal "plain" one.</p>
-            </div>
             <div className="field">
               <label>
                 <input

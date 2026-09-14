@@ -25,10 +25,6 @@ type ValkeyRequest struct {
 	LimitsCPU      string `json:"limitsCpu,omitempty"`
 	LimitsMemory   string `json:"limitsMemory,omitempty"`
 
-	// ExposeType, when non-empty, creates an externally-reachable Service
-	// for the cluster's data-plane port. One of "LoadBalancer"/"NodePort".
-	ExposeType string `json:"exposeType,omitempty"`
-
 	EnablePodMonitor bool `json:"enablePodMonitor"`
 }
 
@@ -57,9 +53,6 @@ func (r ValkeyRequest) validate() error {
 	if err := requireNonEmpty("persistenceSize", r.PersistenceSize); err != nil {
 		return err
 	}
-	if r.ExposeType != "" && r.ExposeType != "LoadBalancer" && r.ExposeType != "NodePort" {
-		return fmt.Errorf("exposeType must be LoadBalancer or NodePort")
-	}
 	return nil
 }
 
@@ -80,9 +73,7 @@ func (r ValkeyRequest) toUnstructured() *unstructured.Unstructured {
 	if resources := buildResources(r.RequestsCPU, r.RequestsMemory, r.LimitsCPU, r.LimitsMemory); resources != nil {
 		spec["resources"] = resources
 	}
-	if r.ExposeType != "" {
-		spec["expose"] = buildExpose(r.ExposeType)
-	}
+	spec["expose"] = buildExpose()
 	spec["monitoring"] = map[string]interface{}{
 		"enablePodMonitor": r.EnablePodMonitor,
 	}

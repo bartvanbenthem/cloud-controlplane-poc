@@ -29,11 +29,6 @@ type MongoDBRequest struct {
 	LimitsMemory   string `json:"limitsMemory,omitempty"`
 
 	EnablePodMonitor bool `json:"enablePodMonitor"`
-
-	// ExposeType, when non-empty, changes the type of the underlying
-	// replica set's own Service so it's reachable outside the cluster.
-	// One of "LoadBalancer"/"NodePort".
-	ExposeType string `json:"exposeType,omitempty"`
 }
 
 func (r *MongoDBRequest) applyDefaults() {
@@ -58,9 +53,6 @@ func (r MongoDBRequest) validate() error {
 	if err := requireNonEmpty("storageSize", r.StorageSize); err != nil {
 		return err
 	}
-	if r.ExposeType != "" && r.ExposeType != "LoadBalancer" && r.ExposeType != "NodePort" {
-		return fmt.Errorf("exposeType must be LoadBalancer or NodePort")
-	}
 	return nil
 }
 
@@ -83,9 +75,7 @@ func (r MongoDBRequest) toUnstructured() *unstructured.Unstructured {
 	spec["monitoring"] = map[string]interface{}{
 		"enablePodMonitor": r.EnablePodMonitor,
 	}
-	if r.ExposeType != "" {
-		spec["expose"] = buildExpose(r.ExposeType)
-	}
+	spec["expose"] = buildExpose()
 
 	obj := &unstructured.Unstructured{}
 	obj.SetUnstructuredContent(map[string]interface{}{

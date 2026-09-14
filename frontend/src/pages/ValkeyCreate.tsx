@@ -15,7 +15,6 @@ const initial: ValkeyCreateRequest = {
   requestsMemory: "",
   limitsCpu: "",
   limitsMemory: "",
-  exposeType: "",
   enablePodMonitor: true,
 };
 
@@ -183,19 +182,8 @@ export function ValkeyCreate() {
         </fieldset>
 
         <fieldset>
-          <legend>Networking &amp; monitoring (optional)</legend>
+          <legend>Monitoring (optional)</legend>
           <div className="form-grid">
-            <div className="field">
-              <label>Expose data-plane port</label>
-              <select
-                value={form.exposeType}
-                onChange={(e) => set("exposeType", e.target.value as typeof form.exposeType)}
-              >
-                <option value="">Cluster-internal only</option>
-                <option value="LoadBalancer">LoadBalancer</option>
-                <option value="NodePort">NodePort</option>
-              </select>
-            </div>
             <div className="field">
               <label>
                 <input

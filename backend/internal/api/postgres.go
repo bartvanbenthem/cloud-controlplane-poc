@@ -30,10 +30,6 @@ type PostgresRequest struct {
 	LimitsMemory   string `json:"limitsMemory,omitempty"`
 
 	EnablePodMonitor bool `json:"enablePodMonitor"`
-
-	// ExposeType, when non-empty, creates an externally-reachable Service
-	// for the primary (read-write) endpoint. One of "LoadBalancer"/"NodePort".
-	ExposeType string `json:"exposeType,omitempty"`
 }
 
 func (r *PostgresRequest) applyDefaults() {
@@ -64,9 +60,6 @@ func (r PostgresRequest) validate() error {
 	if err := requireNonEmpty("databaseOwner", r.DatabaseOwner); err != nil {
 		return err
 	}
-	if r.ExposeType != "" && r.ExposeType != "LoadBalancer" && r.ExposeType != "NodePort" {
-		return fmt.Errorf("exposeType must be LoadBalancer or NodePort")
-	}
 	return nil
 }
 
@@ -93,9 +86,7 @@ func (r PostgresRequest) toUnstructured() *unstructured.Unstructured {
 	spec["monitoring"] = map[string]interface{}{
 		"enablePodMonitor": r.EnablePodMonitor,
 	}
-	if r.ExposeType != "" {
-		spec["expose"] = buildExpose(r.ExposeType)
-	}
+	spec["expose"] = buildExpose()
 
 	obj := &unstructured.Unstructured{}
 	obj.SetUnstructuredContent(map[string]interface{}{
@@ -145,9 +136,13 @@ func buildResources(requestsCPU, requestsMemory, limitsCPU, limitsMemory string)
 // buildExpose builds a ServiceExposeSpec-shaped map (see
 // api/v1alpha1/expose_types.go in project-easter), shared by every kind that
 // exposes an "expose" field (PostgresCluster, MariaDBCluster,
-// ValkeyCluster).
-func buildExpose(exposeType string) map[string]interface{} {
+// MongoDBCluster, ValkeyCluster, RabbitMQCluster, KafkaCluster). Always
+// LoadBalancer: this platform always runs on a cluster that fulfills type
+// LoadBalancer automatically (cloud or MetalLB), and every consumer of
+// these Services is an app on a different Kubernetes cluster, so there's no
+// scenario for ClusterIP-only or NodePort.
+func buildExpose() map[string]interface{} {
 	return map[string]interface{}{
-		"type": exposeType,
+		"type": "LoadBalancer",
 	}
 }

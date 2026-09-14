@@ -15,7 +15,6 @@ const initial: MongoDBCreateRequest = {
   limitsCpu: "",
   limitsMemory: "",
   enablePodMonitor: true,
-  exposeType: "",
 };
 
 export function MongoDBCreate() {
@@ -175,19 +174,8 @@ export function MongoDBCreate() {
         </fieldset>
 
         <fieldset>
-          <legend>Networking &amp; monitoring (optional)</legend>
+          <legend>Monitoring (optional)</legend>
           <div className="form-grid">
-            <div className="field">
-              <label>Expose replica set</label>
-              <select
-                value={form.exposeType}
-                onChange={(e) => set("exposeType", e.target.value as typeof form.exposeType)}
-              >
-                <option value="">Cluster-internal only</option>
-                <option value="LoadBalancer">LoadBalancer</option>
-                <option value="NodePort">NodePort</option>
-              </select>
-            </div>
             <div className="field">
               <label>
                 <input

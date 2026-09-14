@@ -4,6 +4,7 @@ import { api } from "../api";
 import type { CustomResource, Kind } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
 import { CredentialsPanel, hasCredentials } from "../components/CredentialsPanel";
+import { ServiceExposePanel, hasExpose } from "../components/ServiceExposePanel";
 import { GrafanaDashboardEmbed } from "../components/GrafanaDashboardEmbed";
 import { LogCollectorsPanel } from "../components/LogCollectorsPanel";
 
@@ -76,6 +77,15 @@ export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: strin
 
       {hasCredentials(kind) && (
         <CredentialsPanel kind={kind} namespace={resource.metadata.namespace} name={resource.metadata.name} />
+      )}
+
+      {hasExpose(kind) && (
+        <ServiceExposePanel
+          kind={kind}
+          namespace={resource.metadata.namespace}
+          name={resource.metadata.name}
+          resource={resource}
+        />
       )}
 
       {resource.status?.conditions && resource.status.conditions.length > 0 && (

@@ -151,7 +151,6 @@ export interface PostgresCreateRequest {
   limitsCpu?: string;
   limitsMemory?: string;
   enablePodMonitor: boolean;
-  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export interface ValkeyCreateRequest {
@@ -166,7 +165,6 @@ export interface ValkeyCreateRequest {
   requestsMemory?: string;
   limitsCpu?: string;
   limitsMemory?: string;
-  exposeType?: "" | "LoadBalancer" | "NodePort";
   enablePodMonitor: boolean;
 }
 
@@ -197,7 +195,6 @@ export interface MariaDBCreateRequest {
   limitsCpu?: string;
   limitsMemory?: string;
   enablePodMonitor: boolean;
-  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export interface MongoDBCreateRequest {
@@ -212,7 +209,6 @@ export interface MongoDBCreateRequest {
   limitsCpu?: string;
   limitsMemory?: string;
   enablePodMonitor: boolean;
-  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export interface KafkaCreateRequest {
@@ -227,7 +223,6 @@ export interface KafkaCreateRequest {
   limitsCpu?: string;
   limitsMemory?: string;
   enablePodMonitor: boolean;
-  exposeType?: "" | "LoadBalancer" | "NodePort";
 }
 
 export interface RabbitMQCreateRequest {
@@ -244,7 +239,6 @@ export interface RabbitMQCreateRequest {
   ingressHost?: string;
   ingressClassName?: string;
   ingressTlsSecretName?: string;
-  exposeType?: "" | "LoadBalancer" | "NodePort";
   enablePodMonitor: boolean;
 }
 

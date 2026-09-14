@@ -17,7 +17,6 @@ const initial: RabbitMQCreateRequest = {
   ingressHost: "",
   ingressClassName: "",
   ingressTlsSecretName: "",
-  exposeType: "",
   enablePodMonitor: true,
 };
 
@@ -213,23 +212,8 @@ export function RabbitMQCreate() {
         </fieldset>
 
         <fieldset>
-          <legend>Networking &amp; monitoring (optional)</legend>
+          <legend>Monitoring (optional)</legend>
           <div className="form-grid">
-            <div className="field">
-              <label>Expose broker Service</label>
-              <select
-                value={form.exposeType}
-                onChange={(e) => set("exposeType", e.target.value as typeof form.exposeType)}
-              >
-                <option value="">Cluster-internal only</option>
-                <option value="LoadBalancer">LoadBalancer</option>
-                <option value="NodePort">NodePort</option>
-              </select>
-              <p className="hint">
-                Controls the RabbitMQ Cluster Operator's own auto-generated Service — separate from
-                the management UI Ingress above.
-              </p>
-            </div>
             <div className="field">
               <label>
                 <input
