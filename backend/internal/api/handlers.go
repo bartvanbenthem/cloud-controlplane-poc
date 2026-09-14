@@ -101,11 +101,14 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // handlePatch edits one already-created resource in place, via a JSON
-// Merge Patch against its spec. Unlike handleCreate this isn't wired up
-// for every Kind -- only GrafanaInstance's lokiRef is editable through the
-// portal today (see MonitoringDetail's Loki-datasource panel), so every
-// other kind is rejected outright rather than silently accepting a patch
-// it doesn't know how to build.
+// Merge Patch against its spec. Unlike handleCreate this isn't wired up for
+// every Kind -- only the fields below are editable through the portal
+// today: GrafanaInstance's lokiRef (see MonitoringDetail's Loki-datasource
+// panel), and PostgresCluster/MariaDBCluster/KafkaCluster/RabbitMQCluster/
+// MongoDBCluster/ValkeyCluster's storage size (see StorageSizePanel and
+// StorageSizePatch's doc comment for each vendor's resize behavior) --
+// every other kind is rejected outright rather than silently accepting a
+// patch it doesn't know how to build.
 func (s *Server) handlePatch(w http.ResponseWriter, r *http.Request) {
 	kind, err := parseKind(r.PathValue("kind"))
 	if err != nil {
@@ -120,6 +123,36 @@ func (s *Server) handlePatch(w http.ResponseWriter, r *http.Request) {
 		req := &GrafanaLokiRefPatch{}
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
+			return
+		}
+		patch, err = req.mergePatch()
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err)
+			return
+		}
+	case KindPostgres, KindMariaDB, KindKafka, KindRabbitMQ, KindMongoDB:
+		req := &StorageSizePatch{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
+			return
+		}
+		if err := req.validate(); err != nil {
+			writeError(w, http.StatusBadRequest, err)
+			return
+		}
+		patch, err = req.mergePatch()
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err)
+			return
+		}
+	case KindValkey:
+		req := &ValkeyPersistenceSizePatch{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
+			return
+		}
+		if err := req.validate(); err != nil {
+			writeError(w, http.StatusBadRequest, err)
 			return
 		}
 		patch, err = req.mergePatch()

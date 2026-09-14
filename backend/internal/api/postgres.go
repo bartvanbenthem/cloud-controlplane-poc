@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -131,6 +132,52 @@ func buildResources(requestsCPU, requestsMemory, limitsCPU, limitsMemory string)
 		return nil
 	}
 	return resources
+}
+
+// StorageSizePatch is the payload for PATCH
+// /api/resources/{kind}/{namespace}/{name} for every kind whose storage is a
+// spec.storage.size field -- PostgresCluster, MariaDBCluster, KafkaCluster,
+// RabbitMQCluster, and MongoDBCluster (see toUnstructured on each *Request
+// above). Increasing it live-resizes the underlying PVC(s), confirmed per
+// vendor:
+//   - CNPG: crd-cnpg-v1.30.0.yaml's resizeInUseVolumes, defaulting true,
+//     "Changes to this field are automatically reapplied to the created
+//     PVCs. Size cannot be decreased."
+//   - mariadb-operator: crd-mariadb-operator-*.yaml's own
+//     resizeInUseVolumes/waitForVolumeResize.
+//   - Strimzi (Kafka): the Cluster Operator resizes storage.size changes on
+//     existing PVCs automatically, restarting brokers one at a time --
+//     https://strimzi.io/blog/2019/02/28/resizing-persistent-volumes/.
+//   - RabbitMQ Cluster Operator: spec.persistence.storage is a documented
+//     updatable property; the operator deletes/recreates the StatefulSet
+//     and patches the PVCs itself (a past crash-recovery bug in that dance,
+//     https://github.com/rabbitmq/cluster-operator/issues/782, was fixed by
+//     PR #838, well before the v2.22.5 this was built against).
+//   - Percona Server for MongoDB Operator: only resizes PVCs when
+//     spec.storageScaling.enableVolumeScaling is set true on the underlying
+//     PerconaServerMongoDB CR (off by default -- see
+//     docs.percona.com/percona-operator-for-mongodb/1.23.0/debug-storage.html).
+//     project-easter's internal/psmdb now sets this unconditionally.
+//
+// All five require a StorageClass with allowVolumeExpansion: true. No
+// project-easter change is needed beyond the Percona flag above -- its
+// reconciler already Server-Side-Applies the full desired object,
+// storage.size included, on every reconcile (not just at creation), so a
+// patch here reaches the underlying vendor object on the next reconcile.
+type StorageSizePatch struct {
+	StorageSize string `json:"storageSize"`
+}
+
+func (p StorageSizePatch) validate() error {
+	return requireNonEmpty("storageSize", p.StorageSize)
+}
+
+func (p StorageSizePatch) mergePatch() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"spec": map[string]interface{}{
+			"storage": map[string]interface{}{"size": p.StorageSize},
+		},
+	})
 }
 
 // buildExpose builds a ServiceExposeSpec-shaped map (see

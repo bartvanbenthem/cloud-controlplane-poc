@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -89,4 +90,31 @@ func (r ValkeyRequest) toUnstructured() *unstructured.Unstructured {
 		"spec": spec,
 	})
 	return obj
+}
+
+// ValkeyPersistenceSizePatch is the payload for PATCH
+// /api/resources/valkeyclusters/{namespace}/{name} -- ValkeyCluster's
+// storage field is spec.persistence.size rather than spec.storage.size (see
+// ValkeyRequest.PersistenceSize above), so it needs its own patch type
+// instead of reusing StorageSizePatch. Increasing it live-resizes the
+// underlying PVC(s): crd-valkey-v0.6.0.yaml carries a CEL validation rule
+// enforcing persistence.size can only increase
+// ("quantity(self.persistence.size).compareTo(quantity(oldSelf.persistence.
+// size)) >= 0"), which only makes sense if valkey-operator itself resizes
+// the PVCs in place. No project-easter change needed -- see
+// StorageSizePatch's doc comment for why.
+type ValkeyPersistenceSizePatch struct {
+	PersistenceSize string `json:"persistenceSize"`
+}
+
+func (p ValkeyPersistenceSizePatch) validate() error {
+	return requireNonEmpty("persistenceSize", p.PersistenceSize)
+}
+
+func (p ValkeyPersistenceSizePatch) mergePatch() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"spec": map[string]interface{}{
+			"persistence": map[string]interface{}{"size": p.PersistenceSize},
+		},
+	})
 }

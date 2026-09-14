@@ -72,7 +72,11 @@ export function ServiceExposePanel({
         info &&
         (info.addresses && info.addresses.length > 0 ? (
           <p>
-            <code>{info.addresses.join(", ")}</code>
+            <code>
+              {info.addresses
+                .map((a) => (info.port ? `${a}:${info.port}` : a))
+                .join(", ")}
+            </code>
           </p>
         ) : (
           <p className="muted">Pending — the LoadBalancer hasn't been assigned an address yet.</p>

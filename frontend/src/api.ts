@@ -164,6 +164,24 @@ export const api = {
       `/api/resources/grafanainstances/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`,
       { method: "PATCH", body: JSON.stringify({ lokiRef }) },
     ),
+
+  /** Grows an existing PostgresCluster/MariaDBCluster/KafkaCluster/
+   * RabbitMQCluster/MongoDBCluster's storage (never shrinks — see backend's
+   * StorageSizePatch doc comment for per-vendor confirmation that each one
+   * resizes the underlying PVC(s) in place). */
+  patchStorageSize: (kind: Kind, namespace: string, name: string, storageSize: string) =>
+    request<CustomResource>(
+      `/api/resources/${kind}/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`,
+      { method: "PATCH", body: JSON.stringify({ storageSize }) },
+    ),
+
+  /** Grows an existing ValkeyCluster's persistence volume — see backend's
+   * ValkeyPersistenceSizePatch doc comment. */
+  patchValkeyPersistenceSize: (namespace: string, name: string, persistenceSize: string) =>
+    request<CustomResource>(
+      `/api/resources/valkeyclusters/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`,
+      { method: "PATCH", body: JSON.stringify({ persistenceSize }) },
+    ),
 };
 
 export { RequestError };

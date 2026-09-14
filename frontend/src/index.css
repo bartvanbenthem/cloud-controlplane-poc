@@ -340,6 +340,10 @@ form textarea {
 form input[type="checkbox"] {
   margin-right: 8px;
 }
+form input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
 form fieldset {
   border: 1px solid var(--border);
   border-radius: 8px;

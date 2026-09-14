@@ -5,6 +5,7 @@ import type { CustomResource, Kind } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
 import { CredentialsPanel, hasCredentials } from "../components/CredentialsPanel";
 import { ServiceExposePanel, hasExpose } from "../components/ServiceExposePanel";
+import { StorageSizePanel, hasStorageSize } from "../components/StorageSizePanel";
 import { GrafanaDashboardEmbed } from "../components/GrafanaDashboardEmbed";
 import { LogCollectorsPanel } from "../components/LogCollectorsPanel";
 
@@ -85,6 +86,15 @@ export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: strin
           namespace={resource.metadata.namespace}
           name={resource.metadata.name}
           resource={resource}
+        />
+      )}
+
+      {hasStorageSize(kind) && (
+        <StorageSizePanel
+          kind={kind}
+          namespace={resource.metadata.namespace}
+          resource={resource}
+          onUpdated={setResource}
         />
       )}
 
