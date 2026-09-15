@@ -1,4 +1,4 @@
-# CCP — Cloud ControlPlane Portal
+# CCP - Cloud ControlPlane Portal
 
 A multi-cloud self-service web portal that runs on Kubernetes and talks
 **directly** to the Kubernetes API. No GitOps PR round trip, no external
