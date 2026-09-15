@@ -182,6 +182,16 @@ export const api = {
       `/api/resources/valkeyclusters/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`,
       { method: "PATCH", body: JSON.stringify({ persistenceSize }) },
     ),
+
+  /** Scales an existing resource's replica count in place — the wire field
+   * is always "replicas", even for PostgresCluster whose own CRD calls it
+   * spec.instances; the backend's ReplicasPatch maps it per kind. See its
+   * doc comment for which kinds support this and why it's safe live. */
+  patchReplicas: (kind: Kind, namespace: string, name: string, replicas: number) =>
+    request<CustomResource>(
+      `/api/resources/${kind}/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`,
+      { method: "PATCH", body: JSON.stringify({ replicas }) },
+    ),
 };
 
 export { RequestError };

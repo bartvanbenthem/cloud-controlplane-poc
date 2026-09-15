@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 
@@ -102,13 +103,16 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 
 // handlePatch edits one already-created resource in place, via a JSON
 // Merge Patch against its spec. Unlike handleCreate this isn't wired up for
-// every Kind -- only the fields below are editable through the portal
-// today: GrafanaInstance's lokiRef (see MonitoringDetail's Loki-datasource
-// panel), and PostgresCluster/MariaDBCluster/KafkaCluster/RabbitMQCluster/
-// MongoDBCluster/ValkeyCluster's storage size (see StorageSizePanel and
-// StorageSizePatch's doc comment for each vendor's resize behavior) --
-// every other kind is rejected outright rather than silently accepting a
-// patch it doesn't know how to build.
+// every Kind, and a kind's set of editable fields isn't fixed to one
+// either -- the body's own keys pick which patch gets built: "lokiRef" for
+// GrafanaInstance (see MonitoringDetail's Loki-datasource panel),
+// "storageSize"/"persistenceSize" for the kinds StorageSizePanel covers
+// (see StorageSizePatch's doc comment for each vendor's resize behavior),
+// and "replicas" for the kinds ReplicasPatch covers (see its doc comment
+// for which operators support live scaling and why). A key that isn't one
+// of those, or isn't valid for the given kind, falls through to the
+// default case below and is rejected outright rather than silently
+// accepted.
 func (s *Server) handlePatch(w http.ResponseWriter, r *http.Request) {
 	kind, err := parseKind(r.PathValue("kind"))
 	if err != nil {
@@ -117,11 +121,26 @@ func (s *Server) handlePatch(w http.ResponseWriter, r *http.Request) {
 	}
 	ns, name := r.PathValue("namespace"), r.PathValue("name")
 
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
+		return
+	}
+	var probe map[string]json.RawMessage
+	if err := json.Unmarshal(body, &probe); err != nil {
+		writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
+		return
+	}
+	_, hasLokiRef := probe["lokiRef"]
+	_, hasStorageSize := probe["storageSize"]
+	_, hasPersistenceSize := probe["persistenceSize"]
+	_, hasReplicas := probe["replicas"]
+
 	var patch []byte
-	switch kind {
-	case KindGrafana:
+	switch {
+	case kind == KindGrafana && hasLokiRef:
 		req := &GrafanaLokiRefPatch{}
-		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		if err := json.Unmarshal(body, req); err != nil {
 			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
 			return
 		}
@@ -130,9 +149,24 @@ func (s *Server) handlePatch(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, err)
 			return
 		}
-	case KindPostgres, KindMariaDB, KindKafka, KindRabbitMQ, KindMongoDB:
+	case hasReplicas && canPatchReplicas(kind):
+		req := &ReplicasPatch{}
+		if err := json.Unmarshal(body, req); err != nil {
+			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
+			return
+		}
+		if err := req.validate(kind); err != nil {
+			writeError(w, http.StatusBadRequest, err)
+			return
+		}
+		patch, err = req.mergePatch(kind)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err)
+			return
+		}
+	case (kind == KindPostgres || kind == KindMariaDB || kind == KindKafka || kind == KindRabbitMQ || kind == KindMongoDB) && hasStorageSize:
 		req := &StorageSizePatch{}
-		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		if err := json.Unmarshal(body, req); err != nil {
 			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
 			return
 		}
@@ -145,9 +179,9 @@ func (s *Server) handlePatch(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, err)
 			return
 		}
-	case KindValkey:
+	case kind == KindValkey && hasPersistenceSize:
 		req := &ValkeyPersistenceSizePatch{}
-		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		if err := json.Unmarshal(body, req); err != nil {
 			writeError(w, http.StatusBadRequest, errors.New("invalid JSON body"))
 			return
 		}
@@ -161,7 +195,7 @@ func (s *Server) handlePatch(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		writeError(w, http.StatusMethodNotAllowed, fmt.Errorf("%s cannot be edited", kind))
+		writeError(w, http.StatusMethodNotAllowed, fmt.Errorf("%s cannot be edited this way", kind))
 		return
 	}
 

@@ -1,6 +1,10 @@
-export type ServiceLifecycle = "preview" | "ga" | "roadmap";
+export type ServiceLifecycle = "experimental" | "preview" | "ga" | "roadmap";
 
 const COPY: Record<ServiceLifecycle, { label: string; title: string }> = {
+  experimental: {
+    label: "Experimental",
+    title: "Experimental, use at your own risk. Not supported for production use and may change or be removed without notice.",
+  },
   preview: {
     label: "Preview",
     title: "Preview, still evolving. APIs, defaults, and behavior may change without notice.",

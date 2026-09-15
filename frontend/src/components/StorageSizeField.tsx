@@ -11,8 +11,9 @@ import type { CustomResource, Kind } from "../types";
  * for per-vendor confirmation that each one resizes its PVC(s) in place.
  * GrafanaInstance's persistence isn't listed: unlike the others, whether
  * grafana-operator re-applies a size change onto an already-bound PVC on
- * reconcile isn't confirmed. */
-const STORAGE_FIELD: Partial<Record<Kind, "storage" | "persistence">> = {
+ * reconcile isn't confirmed. Exported so SpecPanel knows which top-level
+ * spec key to render this field under. */
+export const STORAGE_FIELD: Partial<Record<Kind, "storage" | "persistence">> = {
   postgresclusters: "storage",
   mariadbclusters: "storage",
   kafkaclusters: "storage",
@@ -56,8 +57,9 @@ function parseGi(size: string): number | null {
  * slider pinned so it can't go below the current size — increasing it
  * live-resizes the underlying PVC(s), handled entirely by the vendor
  * operator once project-easter's reconciler reapplies the new size on its
- * next pass. Mirrors LokiDatasourcePanel's edit-in-place style. */
-export function StorageSizePanel({
+ * next pass. Renders inline (like SpecPanel's ReplicasField) so it can sit
+ * directly in the Spec table's "size" row rather than its own panel. */
+export function StorageSizeField({
   kind,
   namespace,
   resource,
@@ -70,7 +72,7 @@ export function StorageSizePanel({
 }) {
   const field = STORAGE_FIELD[kind];
   const spec = resource.spec as Record<string, { size?: string } | undefined>;
-  const currentSize = (field && spec[field]?.size) || "";
+  const currentSize = (field && spec[field!]?.size) || "";
   const currentGi = parseGi(currentSize);
 
   // minGi is rounded up (never down) from the actual current size, so the
@@ -116,57 +118,56 @@ export function StorageSizePanel({
     }
   }
 
+  if (!editing) {
+    return (
+      <span>
+        <strong>{currentSize || "–"}</strong>{" "}
+        <button type="button" className="btn-link" onClick={startEditing}>
+          Edit
+        </button>
+      </span>
+    );
+  }
+
   return (
-    <div className="panel">
-      <h3>Storage</h3>
-      {!editing ? (
-        <p>
-          <strong>{currentSize || "–"}</strong>{" "}
-          <button type="button" className="btn-link" onClick={startEditing}>
-            Edit
-          </button>
+    <form onSubmit={handleSubmit} style={{ display: "inline-block", minWidth: 220 }}>
+      {error && <div className="error-banner">{error}</div>}
+      <div className="field" style={{ marginBottom: 8 }}>
+        <label>Size{currentGi !== null ? ` — ${draft}` : ""}</label>
+        {currentGi !== null ? (
+          <input
+            type="range"
+            min={minGi}
+            max={maxGi}
+            step={step}
+            value={draftGi}
+            onChange={(e) => setDraftGi(Number(e.target.value))}
+          />
+        ) : (
+          <input
+            value={draftText}
+            onChange={(e) => setDraftText(e.target.value)}
+            placeholder="e.g. 20Gi"
+          />
+        )}
+        <p className="hint">
+          Volumes can only grow, never shrink — the underlying operator resizes the PVC(s) in
+          place; this can take a few minutes to finish.
         </p>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          {error && <div className="error-banner">{error}</div>}
-          <div className="field">
-            <label>Size{currentGi !== null ? ` — ${draft}` : ""}</label>
-            {currentGi !== null ? (
-              <input
-                type="range"
-                min={minGi}
-                max={maxGi}
-                step={step}
-                value={draftGi}
-                onChange={(e) => setDraftGi(Number(e.target.value))}
-              />
-            ) : (
-              <input
-                value={draftText}
-                onChange={(e) => setDraftText(e.target.value)}
-                placeholder="e.g. 20Gi"
-              />
-            )}
-            <p className="hint">
-              Volumes can only grow, never shrink — the underlying operator resizes the PVC(s) in
-              place; this can take a few minutes to finish.
-            </p>
-          </div>
-          <div className="actions-row">
-            <button className="btn" type="submit" disabled={saving || unchanged || draft === ""}>
-              {saving ? "Saving…" : "Save"}
-            </button>
-            <button
-              className="btn secondary"
-              type="button"
-              onClick={() => setEditing(false)}
-              disabled={saving}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
+      </div>
+      <div className="actions-row" style={{ marginTop: 0 }}>
+        <button className="btn" type="submit" disabled={saving || unchanged || draft === ""}>
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <button
+          className="btn secondary"
+          type="button"
+          onClick={() => setEditing(false)}
+          disabled={saving}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }

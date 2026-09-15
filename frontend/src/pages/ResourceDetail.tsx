@@ -5,9 +5,9 @@ import type { CustomResource, Kind } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
 import { CredentialsPanel, hasCredentials } from "../components/CredentialsPanel";
 import { ServiceExposePanel, hasExpose } from "../components/ServiceExposePanel";
-import { StorageSizePanel, hasStorageSize } from "../components/StorageSizePanel";
 import { GrafanaDashboardEmbed } from "../components/GrafanaDashboardEmbed";
 import { LogCollectorsPanel } from "../components/LogCollectorsPanel";
+import { SpecPanel } from "../components/SpecPanel";
 
 export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: string }) {
   const { namespace = "", name = "" } = useParams();
@@ -89,15 +89,6 @@ export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: strin
         />
       )}
 
-      {hasStorageSize(kind) && (
-        <StorageSizePanel
-          kind={kind}
-          namespace={resource.metadata.namespace}
-          resource={resource}
-          onUpdated={setResource}
-        />
-      )}
-
       {resource.status?.conditions && resource.status.conditions.length > 0 && (
         <div className="panel">
           <h3>Conditions</h3>
@@ -128,10 +119,7 @@ export function ResourceDetail({ kind, listPath }: { kind: Kind; listPath: strin
 
       <LogCollectorsPanel kind={kind} namespace={resource.metadata.namespace} name={resource.metadata.name} />
 
-      <div className="panel">
-        <h3>Spec</h3>
-        <pre>{JSON.stringify(resource.spec, null, 2)}</pre>
-      </div>
+      <SpecPanel kind={kind} namespace={resource.metadata.namespace} resource={resource} onUpdated={setResource} />
 
       <div className="panel">
         <h3>Status</h3>

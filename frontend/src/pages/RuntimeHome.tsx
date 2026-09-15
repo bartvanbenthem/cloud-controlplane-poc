@@ -24,7 +24,7 @@ export function RuntimeHome() {
       <div className="page-header">
         <div className="page-title">
           <h2>Runtime</h2>
-          <LifecycleBadge status="ga" />
+          <LifecycleBadge status="experimental" />
         </div>
       </div>
       <p className="page-description">
