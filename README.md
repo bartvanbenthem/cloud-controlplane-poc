@@ -20,7 +20,7 @@ the Dashboard:
   meta-operator fronting CloudNativePG, valkey-operator,
   mariadb-operator, the Percona Server for MongoDB Operator, RabbitMQ
   Cluster Operator, Strimzi, grafana-operator, the Prometheus Operator,
-  and the Loki Operator, with its own thin `paas.example.com/v1alpha1`
+  and the Loki Operator, with its own thin `paas.cncp.nl/v1alpha1`
   CRDs):
   - **PostgreSQL** — `PostgresCluster`
   - **Redis** — `ValkeyCluster` (Valkey)
@@ -78,11 +78,13 @@ case.
   two API groups — `compute.sostackit.dev/v1alpha1` `Cluster`/`Server`
   (plus `Volume`, created internally but not portal-facing — see below),
   and
-  `paas.example.com/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`MariaDBCluster`/`MongoDBCluster`/`RabbitMQCluster`/`KafkaCluster`/`GrafanaInstance`/`PrometheusInstance`/`LokiInstance`/`AlloyInstance`
+  `paas.cncp.nl/v1alpha1` `PostgresCluster`/`ValkeyCluster`/`MariaDBCluster`/`MongoDBCluster`/`RabbitMQCluster`/`KafkaCluster`/`GrafanaInstance`/`PrometheusInstance`/`LokiInstance`/`AlloyInstance`
   — via `GET/POST /api/resources/{kind}`, `GET/DELETE .../{namespace}/{name}`,
-  a `PATCH` for `GrafanaInstance`'s `lokiRef` (the only field editable
-  after creation — see `MonitoringDetail`'s Loki-datasource panel), plus
-  `GET /api/namespaces`. Runs in-cluster under its own ServiceAccount
+  a `PATCH` for the few fields editable after creation — `GrafanaInstance`'s
+  `lokiRef` (see `MonitoringDetail`'s Loki-datasource panel), storage/
+  persistence size (see `StorageSizeField`), and replica counts (see
+  `SpecPanel`'s `ReplicasField`) — plus `GET /api/namespaces`. Runs
+  in-cluster under its own ServiceAccount
   (falls back to `$KUBECONFIG` / `~/.kube/config` for local dev), and
   serves the built frontend itself (embedded via `go:embed`) — one binary,
   one container.

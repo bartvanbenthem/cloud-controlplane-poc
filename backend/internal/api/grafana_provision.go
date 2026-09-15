@@ -12,7 +12,7 @@ import (
 )
 
 // vendorGrafanaGVR is grafana-operator's own Grafana CRD -- distinct from
-// this portal's paas.example.com GrafanaInstance wrapper (KindGrafana).
+// this portal's paas.cncp.nl GrafanaInstance wrapper (KindGrafana).
 // The portal otherwise never touches vendor CRDs directly (see
 // deploy/02-rbac.yaml's comment); this is a narrow, deliberate exception so
 // GrafanaDashboardEmbed's <iframe> (embedding a resource's auto-provisioned

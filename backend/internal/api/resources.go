@@ -15,7 +15,7 @@ const (
 	stackitGroup   = "compute.sostackit.dev"
 	stackitVersion = "v1alpha1"
 
-	paasGroup   = "paas.example.com"
+	paasGroup   = "paas.cncp.nl"
 	paasVersion = "v1alpha1"
 )
 
@@ -26,16 +26,16 @@ type Kind string
 const (
 	KindCluster    Kind = "clusters"            // STACKIT SKE — compute.sostackit.dev
 	KindServer     Kind = "servers"             // STACKIT Compute Engine (VM) — compute.sostackit.dev
-	KindPostgres   Kind = "postgresclusters"    // project-easter — paas.example.com
-	KindValkey     Kind = "valkeyclusters"      // project-easter — paas.example.com
-	KindMariaDB    Kind = "mariadbclusters"     // project-easter — paas.example.com
-	KindMongoDB    Kind = "mongodbclusters"     // project-easter — paas.example.com
-	KindRabbitMQ   Kind = "rabbitmqclusters"    // project-easter — paas.example.com
-	KindKafka      Kind = "kafkaclusters"       // project-easter — paas.example.com
-	KindGrafana    Kind = "grafanainstances"    // project-easter — paas.example.com
-	KindPrometheus Kind = "prometheusinstances" // project-easter — paas.example.com
-	KindLoki       Kind = "lokiinstances"       // project-easter — paas.example.com
-	KindAlloy      Kind = "alloyinstances"      // project-easter — paas.example.com
+	KindPostgres   Kind = "postgresclusters"    // project-easter — paas.cncp.nl
+	KindValkey     Kind = "valkeyclusters"      // project-easter — paas.cncp.nl
+	KindMariaDB    Kind = "mariadbclusters"     // project-easter — paas.cncp.nl
+	KindMongoDB    Kind = "mongodbclusters"     // project-easter — paas.cncp.nl
+	KindRabbitMQ   Kind = "rabbitmqclusters"    // project-easter — paas.cncp.nl
+	KindKafka      Kind = "kafkaclusters"       // project-easter — paas.cncp.nl
+	KindGrafana    Kind = "grafanainstances"    // project-easter — paas.cncp.nl
+	KindPrometheus Kind = "prometheusinstances" // project-easter — paas.cncp.nl
+	KindLoki       Kind = "lokiinstances"       // project-easter — paas.cncp.nl
+	KindAlloy      Kind = "alloyinstances"      // project-easter — paas.cncp.nl
 )
 
 var kindGVRs = map[Kind]schema.GroupVersionResource{

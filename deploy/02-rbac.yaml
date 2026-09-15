@@ -5,7 +5,7 @@
 # access to the vendor CRDs (CNPG's Cluster, valkey-operator's
 # ValkeyCluster, mariadb-operator's MariaDB, RabbitMQ Cluster Operator's
 # RabbitmqCluster, Prometheus Operator's Prometheus, Loki Operator's
-# LokiStack) these paas.example.com CRs front — that's project-easter's own
+# LokiStack) these paas.cncp.nl CRs front — that's project-easter's own
 # ServiceAccount's job, not this portal's.
 #
 # The "secrets"/get grant is a deliberate, narrow exception to "no core
@@ -48,7 +48,7 @@
 # detached PVC stuck Terminating.
 #
 # The "grafana.integreatly.org"/"grafanas" get+update grant is the one
-# place this portal reaches past its own paas.example.com CRDs into a
+# place this portal reaches past its own paas.cncp.nl CRDs into a
 # vendor one (see backend/internal/api/grafana_provision.go): Grafana has
 # to be told (via that CRD's own spec.config) to allow embedding and accept
 # anonymous Viewer sessions, or GrafanaDashboardEmbed.tsx's <iframe> can't
@@ -75,7 +75,15 @@ rules:
   - apiGroups: ["compute.sostackit.dev"]
     resources: ["volumes"]
     verbs: ["get", "create", "update", "delete"]
-  - apiGroups: ["paas.example.com"]
+  # lokiinstances has no rule of its own below because it's the one
+  # paas.cncp.nl kind with nothing editable after creation (see
+  # handlePatch) — every other kind here gets "patch" for at least one
+  # field: storage/persistence size (StorageSizePatch/
+  # ValkeyPersistenceSizePatch) and/or replica count (ReplicasPatch), plus
+  # grafanainstances' own spec.lokiRef (GrafanaLokiRefPatch, backing
+  # MonitoringDetail's Loki-datasource editor). handlePatch itself decides
+  # which field a given kind may patch; this grant is just the ceiling.
+  - apiGroups: ["paas.cncp.nl"]
     resources:
       [
         "postgresclusters",
@@ -84,20 +92,14 @@ rules:
         "mongodbclusters",
         "rabbitmqclusters",
         "kafkaclusters",
+        "grafanainstances",
         "prometheusinstances",
-        "lokiinstances",
         "alloyinstances",
       ]
-    verbs: ["get", "list", "watch", "create", "delete"]
-  # grafanainstances gets its own rule, split out from the block above,
-  # for the extra "patch" verb: MonitoringDetail's Loki-datasource editor
-  # (backend/internal/api/handlers.go's handlePatch) lets you set/clear an
-  # existing GrafanaInstance's spec.lokiRef via a JSON merge patch instead
-  # of live-patching the cluster by hand. No other paas.example.com kind is
-  # editable through the portal yet, so none of the others need it.
-  - apiGroups: ["paas.example.com"]
-    resources: ["grafanainstances"]
     verbs: ["get", "list", "watch", "create", "delete", "patch"]
+  - apiGroups: ["paas.cncp.nl"]
+    resources: ["lokiinstances"]
+    verbs: ["get", "list", "watch", "create", "delete"]
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["get", "list"]
